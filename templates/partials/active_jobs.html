@@ -1,0 +1,11 @@
+{# HTMX fragment for displaying active jobs #}
+{% if jobs %}
+    {% for job in jobs %}
+        {% include 'partials/job_card.html' %}
+    {% endfor %}
+{% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">📥</div>
+        <p>No active downloads. Paste a URL above to get started.</p>
+    </div>
+{% endif %}

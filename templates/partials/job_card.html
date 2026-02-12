@@ -1,0 +1,110 @@
+{# HTMX fragment for a single job card #}
+<div
+    class="job-card"
+    hx-get="{{ url_for('job_status', job_id=job.id) }}"
+    hx-trigger="every 2s"
+    hx-swap="outerHTML"
+>
+    <div class="job-header">
+        <div>
+            <h3 class="job-title">
+                {% if job.title %}
+                    {{ job.title }}
+                {% else %}
+                    {{ job.url }}
+                {% endif %}
+            </h3>
+            <div class="job-meta">
+                <span class="badge badge-{{ job.platform }}">{{ job.platform }}</span>
+                <span class="badge badge-{{ job.status }}">{{ job.status }}</span>
+                {% if job.created_at %}
+                    <span style="font-size: 0.75rem; color: var(--pico-muted-color);">
+                        {{ job.created_at[:19] if job.created_at|length > 19 else job.created_at }}
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="job-actions">
+            {% if job.status in ['pending', 'running'] %}
+                <form
+                    method="post"
+                    action="{{ url_for('cancel_job', job_id=job.id) }}"
+                    hx-post="{{ url_for('cancel_job', job_id=job.id) }}"
+                    hx-target="closest .job-card"
+                    hx-swap="outerHTML"
+                >
+                    <button type="submit" class="secondary">Cancel</button>
+                </form>
+            {% endif %}
+
+            {% if job.status == 'failed' %}
+                <form
+                    method="post"
+                    action="{{ url_for('retry_job', job_id=job.id) }}"
+                    hx-post="{{ url_for('retry_job', job_id=job.id) }}"
+                    hx-target="closest .job-card"
+                    hx-swap="outerHTML"
+                >
+                    <button type="submit">Retry</button>
+                </form>
+            {% endif %}
+
+            {% if job.status == 'completed' %}
+                <a href="{{ url_for('browse', subpath=job.platform) }}" class="secondary">Browse</a>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if job.progress is none %}
+        {% set progress = 0 %}
+    {% else %}
+        {% set progress = job.progress %}
+    {% endif %}
+
+    {% if job.status in ['pending', 'running'] or progress > 0 %}
+        <div class="progress-container">
+            <progress value="{{ progress }}" max="100"></progress>
+            <div class="progress-text">
+                <span>{{ progress }}%</span>
+                <span>{{ job.current_operation or 'Initializing...' }}</span>
+            </div>
+        </div>
+    {% endif %}
+
+    {% if job.error_message %}
+        <div class="error-message">
+            <strong>Error:</strong> {{ job.error_message }}
+        </div>
+    {% endif %}
+
+    {% if job.status == 'completed' and files %}
+        <div style="margin-top: 1rem;">
+            <strong>Files downloaded:</strong>
+            <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
+                {% for file in files %}
+                    <li style="font-size: 0.875rem;">
+                        <a href="{{ url_for('browse', subpath=file.file_path) }}" target="_blank">
+                            {{ file.file_path.split('/')[-1] }}
+                        </a>
+                        <span style="color: var(--pico-muted-color);">
+                            ({{ "{:,.0f}".format(file.size) if file.size else '0' }} bytes)
+                        </span>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+    {% if job.status == 'completed' and not files %}
+        <div style="margin-top: 1rem; color: var(--pico-muted-color); font-size: 0.875rem;">
+            Completed. Browse the {{ job.platform }} folder to see downloaded files.
+        </div>
+    {% endif %}
+
+    {% if job.retry_count and job.retry_count > 0 %}
+        <div style="margin-top: 0.5rem; font-size: 0.75rem; color: var(--pico-muted-color);">
+            Retry attempt {{ job.retry_count }}
+        </div>
+    {% endif %}
+</div>

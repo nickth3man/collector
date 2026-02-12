@@ -1,0 +1,38 @@
+[project]
+name = "collector"
+version = "2.0.0"
+description = "Instagram + YouTube content scraper with Flask web interface"
+requires-python = ">=3.10"
+dependencies = [
+    "flask>=3.0.0",
+    "flask-executor>=1.0.0",
+    "instaloader>=4.15.0",
+    "gallery-dl>=1.25.0",
+    "yt-dlp>=2023.12.0",
+    "youtube-transcript-api>=1.2.4",
+    "cryptography>=41.0.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+]
+
+[tool.black]
+line-length = 100
+target-version = ["py310"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
