@@ -89,16 +89,15 @@ def get_page_access_error(url: str, timeout_seconds: int = 10) -> str | None:
 
 
 def start_flask_background_process() -> subprocess.Popen[bytes]:
-    """Start run_dev.py in background."""
+    """Start the collector app in background."""
     env = os.environ.copy()
 
-    # Import app from run_dev.py and run without the debug reloader so this script
-    # controls a single background process for reliable cleanup.
     command = [
         sys.executable,
         "-c",
         (
-            "from run_dev import app; "
+            "from collector import create_app; "
+            "app = create_app(); "
             "app.run(debug=False, host='0.0.0.0', port=5000, use_reloader=False)"
         ),
     ]
@@ -287,7 +286,7 @@ def main() -> int:
         if is_url_reachable(BASE_URL):
             print("Flask app already running at http://127.0.0.1:5000")
         else:
-            print("Flask app not running; starting run_dev.py in background...")
+            print("Flask app not running; starting collector in background...")
             app_process = start_flask_background_process()
             app_started_by_script = True
 
