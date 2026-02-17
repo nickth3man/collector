@@ -121,7 +121,7 @@ class DatabaseConfig:
                         index_name = match.group(1) if match else "unknown"
 
                         conn.execute(index_sql)
-                        print(f"  ✓ Created: {index_name}")
+                        print(f"  [OK] Created: {index_name}")
                     except sqlite3.OperationalError as e:
                         print(f"  ✗ Error: {e}")
 
@@ -172,11 +172,11 @@ class DatabaseConfig:
                         if index_name not in existing_index_names:
                             try:
                                 conn.execute(index_sql)
-                                print(f"  ✓ Created: {index_name}")
+                                print(f"  [OK] Created: {index_name}")
                             except sqlite3.OperationalError as e:
                                 print(f"  ✗ Error creating {index_name}: {e}")
                         else:
-                            print(f"  ✓ Exists: {index_name}")
+                            print(f"  [OK] Exists: {index_name}")
 
             conn.commit()
             print("\nIndex verification complete!")
@@ -197,7 +197,7 @@ class DatabaseConfig:
             with self.get_connection() as conn:
                 conn.execute(create_sql)
                 conn.commit()
-                print(f"  ✓ Table: {table_name}")
+                print(f"  [OK] Table: {table_name}")
 
         # Then ensure indexes exist
         self.ensure_indexes(model_classes)
@@ -238,7 +238,27 @@ def get_db_config() -> DatabaseConfig:
         RuntimeError: If called outside of an application context.
     """
     if "db_config" not in g:
-        g.db_config = DatabaseConfig()
+        configured_db_path = current_app.config.get("SCRAPER_DB_PATH")
+        if configured_db_path:
+            g.db_config = DatabaseConfig(Path(configured_db_path))
+        else:
+            configured_database_path = current_app.config.get("DATABASE_PATH")
+            g.db_config = (
+                DatabaseConfig(Path(configured_database_path))
+                if configured_database_path
+                else DatabaseConfig()
+            )
+
+        initialized_paths = current_app.extensions.setdefault("initialized_db_schema_paths", set())
+        db_path_str = str(g.db_config.db_path)
+        if db_path_str not in initialized_paths:
+            from ..models.file import File
+            from ..models.job import Job
+            from ..models.settings import Settings
+
+            g.db_config.initialize_schema([Job, File, Settings])
+            initialized_paths.add(db_path_str)
+
     return g.db_config
 
 
@@ -252,8 +272,9 @@ def get_db() -> sqlite3.Connection:
         RuntimeError: If called outside of an application context.
     """
     if "db" not in g:
+        db_path = current_app.config.get("SCRAPER_DB_PATH") or current_app.config["DATABASE_PATH"]
         g.db = sqlite3.connect(
-            current_app.config["DATABASE_PATH"], detect_types=sqlite3.PARSE_DECLTYPES
+            db_path, detect_types=sqlite3.PARSE_DECLTYPES
         )
         g.db.row_factory = sqlite3.Row
     return g.db

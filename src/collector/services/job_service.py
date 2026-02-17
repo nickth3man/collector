@@ -7,7 +7,7 @@ operations with the repository layer.
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -120,7 +120,26 @@ class JobService:
         Returns:
             List of active job instances ordered by creation time
         """
-        return self.job_repository.get_active_jobs()
+        jobs = self.job_repository.get_active_jobs()
+
+        stale_cutoff = datetime.utcnow() - timedelta(minutes=30)
+        active_jobs: list[Job] = []
+
+        for job in jobs:
+            updated_at = getattr(job, "updated_at", None)
+            if isinstance(updated_at, datetime) and updated_at < stale_cutoff:
+                logger.warning("Marking stale active job as failed: %s", job.id)
+                self.update_job(
+                    job.id,
+                    status=STATUS_FAILED,
+                    error_message="Job was stale and was automatically failed after restart.",
+                    completed_at=datetime.now(timezone.utc).isoformat(),
+                )
+                continue
+
+            active_jobs.append(job)
+
+        return active_jobs
 
     def list_jobs(
         self,

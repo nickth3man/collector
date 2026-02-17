@@ -12,6 +12,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from flask import current_app
+
 from ..repositories.settings_repository import SettingsRepository
 from .session_manager import SessionManager
 
@@ -32,7 +34,16 @@ class SessionService:
             session_manager: Session manager instance
             settings_repository: Repository for settings operations
         """
-        self.session_manager = session_manager
+        if session_manager:
+            self.session_manager = session_manager
+        else:
+            try:
+                config_dir = Path(current_app.config.get("SCRAPER_DOWNLOAD_DIR", "./downloads"))
+                encryption_key = current_app.config.get("SCRAPER_SESSION_KEY")
+                self.session_manager = SessionManager(config_dir=config_dir, encryption_key=encryption_key)
+            except RuntimeError:
+                self.session_manager = None
+
         self.settings_repository = settings_repository or SettingsRepository()
 
     def upload_session(self, cookies_file_content: str, filename: str) -> dict[str, Any]:

@@ -3,15 +3,40 @@
 {% block title %}Error - Content Collector{% endblock %}
 
 {% block content %}
-<article style="max-width: 600px; margin: 3rem auto;">
-    <header>
-        <h1>⚠️ Error</h1>
-    </header>
+<div class="page-header">
+    <h1>Request Error</h1>
+    <p class="page-subtitle">The requested page could not be completed. Use one of the recovery actions below.</p>
+</div>
 
-    <p>{{ error or "An error occurred while processing your request." }}</p>
+{% set raw_error = (error or "An error occurred while processing your request.") %}
+{% set lower_error = raw_error|lower %}
+{% set preview_context_error = '/preview' in request.path or 'preview' in lower_error %}
 
-    <div style="margin-top: 1.5rem;">
-        <a href="{{ url_for('index') }}" class="primary">Return to Dashboard</a>
-    </div>
-</article>
+<section class="section-stack">
+    <article class="panel" style="max-width: 760px; margin: 0 auto;">
+        <header class="panel-header">
+            <div>
+                <h2>What happened</h2>
+                <p class="helper-text">{{ raw_error }}</p>
+            </div>
+        </header>
+
+        {% if preview_context_error %}
+            <div class="notification info" style="margin: 0;">
+                <strong>Preview route note:</strong> File preview requires a file path,
+                for example <code>/preview/platform/folder/file.ext</code>. The bare preview route does not render by itself.
+            </div>
+        {% endif %}
+
+        <footer class="panel-footer">
+            <div class="action-row">
+                {% if preview_context_error %}
+                    <a href="{{ url_for('pages.browse') }}" class="action-primary">Browse Files</a>
+                    <a href="{{ url_for('pages.history') }}" class="action-secondary">Open History</a>
+                {% endif %}
+                <a href="{{ url_for('pages.index') }}" class="action-secondary">Return to Dashboard</a>
+            </div>
+        </footer>
+    </article>
+</section>
 {% endblock %}

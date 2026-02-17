@@ -47,8 +47,32 @@ class TestInstagramScraper:
         assert scraper._extract_shortcode("invalid-url") is None
 
     def test_sanitize_filename(self, scraper):
-        """Test filename sanitization."""
+        """Test filename sanitization using base class method."""
         assert scraper.sanitize_filename("test:file/name") == "test_file_name"
         assert scraper.sanitize_filename("file<>|?*name") == "file_____name"
         assert scraper.sanitize_filename("") == "unnamed"
         assert scraper.sanitize_filename("  .test.  ") == "test"
+
+    def test_detect_url_type_stories(self, scraper):
+        """Test stories URL detection."""
+        assert scraper._detect_url_type("https://www.instagram.com/stories/username/") == "stories"
+        assert scraper._detect_url_type("https://instagram.com/stories/username/12345") == "stories"
+        assert scraper._detect_url_type("https://www.instagram.com/stories/natgeo/") == "stories"
+
+    def test_detect_url_type_highlights(self, scraper):
+        """Test highlights URL detection."""
+        assert scraper._detect_url_type("https://www.instagram.com/highlights/username/") == "highlights"
+        assert scraper._detect_url_type("https://instagram.com/highlights/username/") == "highlights"
+
+    def test_scrape_stories_requires_session(self, scraper):
+        """Test that stories scraping requires an authenticated session."""
+        result = scraper._scrape_stories("https://www.instagram.com/stories/test/", "job-123")
+        assert not result["success"]
+        assert "authenticated session" in result["error"].lower()
+
+    def test_scrape_highlights_requires_session(self, scraper):
+        """Test that highlights scraping requires an authenticated session."""
+        result = scraper._scrape_highlights("https://www.instagram.com/highlights/test/", "job-123")
+        assert not result["success"]
+        assert "authenticated session" in result["error"].lower()
+

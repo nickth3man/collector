@@ -3,14 +3,21 @@
 {% block title %}Browse Files - Content Collector{% endblock %}
 
 {% block content %}
-<h1>Browse Files</h1>
+<div class="page-header">
+    <h1>Browse Files</h1>
+    <p class="page-subtitle">
+        Explore downloaded content by folder. Open any file to preview, then return to continue browsing.
+    </p>
+</div>
 
 <div class="breadcrumb">
-    <a href="{{ url_for('browse') }}">🏠 Root</a>
-    {% if current_path %}
-        {% for part in current_path.parts %}
+    <a href="{{ url_for('pages.browse') }}">🏠 Root</a>
+    {% if current_path_parts %}
+        {% set ns = namespace(path='') %}
+        {% for part in current_path_parts %}
+            {% set ns.path = (ns.path ~ '/' if ns.path else '') ~ part %}
             <span>/</span>
-            <span>{{ part }}</span>
+            <a href="{{ url_for('pages.browse', subpath=ns.path) }}">{{ part }}</a>
         {% endfor %}
     {% endif %}
 </div>
@@ -21,10 +28,10 @@
             <div
                 class="file-item"
                 {% if item.is_dir %}
-                    hx-get="{{ url_for('browse', subpath=item.relative_path) }}"
+                    hx-get="{{ url_for('pages.browse', subpath=item.relative_path) }}"
                     hx-push-url="true"
                 {% else %}
-                    hx-get="{{ url_for('preview_file', filepath=item.relative_path) }}"
+                    hx-get="{{ url_for('pages.preview_file', filepath=item.relative_path) }}"
                     hx-push-url="true"
                 {% endif %}
             >
@@ -51,7 +58,7 @@
                 {% endif %}
                 {% if not item.is_dir %}
                 <div style="margin-top: 0.5rem;">
-                    <small style="color: var(--pico-muted-color);">Click to preview</small>
+                    <small class="helper-text">Preview file</small>
                 </div>
                 {% endif %}
             </div>
@@ -62,9 +69,15 @@
         <div class="empty-state-icon">📁</div>
         <p>This directory is empty.</p>
         {% if is_root %}
-            <p style="font-size: 0.875rem;">
-                Start by <a href="{{ url_for('index') }}">downloading some content</a>.
-            </p>
+            <p class="helper-text">Start by creating a new download from the dashboard.</p>
+            <div class="action-row" style="justify-content: center; margin-top: 0.75rem;">
+                <a href="{{ url_for('pages.index') }}" role="button">Go to Dashboard</a>
+            </div>
+        {% else %}
+            <p class="helper-text">Move up one level or return to root to continue browsing.</p>
+            <div class="action-row" style="justify-content: center; margin-top: 0.75rem;">
+                <a href="{{ url_for('pages.browse') }}" class="secondary" role="button">Back to Root</a>
+            </div>
         {% endif %}
     </div>
 {% endif %}

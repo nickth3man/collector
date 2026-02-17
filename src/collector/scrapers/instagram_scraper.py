@@ -46,7 +46,7 @@ class InstagramScraper(BaseScraper):
         """Scrape Instagram content from URL.
 
         Args:
-            url: Instagram URL (profile, post, reel)
+            url: Instagram URL (profile, post, reel, stories, highlights)
             job_id: Job ID for tracking
 
         Returns:
@@ -71,6 +71,10 @@ class InstagramScraper(BaseScraper):
                 return self._scrape_profile(url, job_id)
             elif url_type == "post":
                 return self._scrape_post(url, job_id)
+            elif url_type == "stories":
+                return self._scrape_stories(url, job_id)
+            elif url_type == "highlights":
+                return self._scrape_highlights(url, job_id)
             else:
                 scrape_result["error"] = f"Unsupported URL type: {url_type}"
                 return scrape_result
@@ -87,11 +91,15 @@ class InstagramScraper(BaseScraper):
             url: Instagram URL
 
         Returns:
-            URL type: 'profile', 'post', 'reel', 'unknown'
+            URL type: 'profile', 'post', 'stories', 'highlights', 'unknown'
         """
         if "/p/" in url or "/reel/" in url:
             return "post"
-        elif "instagram.com/" in url and not any(x in url for x in ["/p/", "/reel/", "/tv/"]):
+        elif "/stories/" in url:
+            return "stories"
+        elif "/highlights/" in url:
+            return "highlights"
+        elif "instagram.com/" in url and not any(x in url for x in ["/p/", "/reel/", "/tv/", "/stories/", "/highlights/"]):
             return "profile"
         return "unknown"
 
@@ -590,3 +598,304 @@ class InstagramScraper(BaseScraper):
         if match:
             return match.group(2)
         return None
+
+    def _find_downloaded_files(self, directory: Path, job_id: str) -> list[dict[str, Any]]:
+        """Find files downloaded by Instaloader in a directory.
+
+        Args:
+            directory: Directory to search
+            job_id: Job ID for file records
+
+        Returns:
+            List of file info dictionaries
+        """
+        files = []
+        try:
+            for file_path in directory.iterdir():
+                if file_path.is_file() and file_path.name not in ["metadata.json", ".json"]:
+                    file_type = FILE_TYPE_IMAGE  # Default
+                    if file_path.suffix in [".mp4", ".mov"]:
+                        file_type = FILE_TYPE_VIDEO
+                    elif file_path.suffix == ".json":
+                        file_type = FILE_TYPE_METADATA
+
+                    self.save_file_record(
+                        job_id,
+                        str(file_path.relative_to(self.download_dir)),
+                        file_type,
+                        file_path.stat().st_size,
+                    )
+                    files.append(
+                        {
+                            "file_path": str(file_path.relative_to(self.download_dir)),
+                            "file_type": file_type,
+                            "file_size": file_path.stat().st_size,
+                        }
+                    )
+        except FileNotFoundError:
+            pass
+        return files
+
+    def _scrape_stories(self, url: str, job_id: str) -> dict[str, Any]:
+        """Scrape Instagram stories from a URL.
+
+        Args:
+            url: Instagram stories URL (e.g., instagram.com/stories/username/)
+            job_id: Job ID for tracking
+
+        Returns:
+            Scrape result dictionary with success status, files, metadata
+        """
+        scrape_result: dict[str, Any] = {
+            "success": False,
+            "title": None,
+            "files": [],
+            "metadata": {},
+            "error": None,
+        }
+
+        if not self.session_file or not self.session_file.exists():
+            scrape_result["error"] = "Stories require authenticated session. Please upload cookies.txt first."
+            return scrape_result
+
+        try:
+            # Extract username from stories URL
+            username = self._extract_username(url)
+            if not username:
+                scrape_result["error"] = "Could not extract username from stories URL"
+                return scrape_result
+
+            scrape_result["title"] = f"@{username} Stories"
+            self.update_progress(10, f"Loading stories for @{username}")
+
+            loader = self._get_instaloader()
+
+            try:
+                profile = instaloader.Profile.from_username(loader.context, username)
+            except Exception as e:
+                error_msg = str(e)
+                if "401" in error_msg or "404" in error_msg:
+                    scrape_result["error"] = f"Authentication error: {error_msg}"
+                    return scrape_result
+                raise
+
+            output_dir = self.download_dir / "instagram" / username / "stories"
+            output_dir.mkdir(parents=True, exist_ok=True)
+
+            # Get available stories
+            from instaloader.stories import stories
+
+            story_items = list(stories([profile.userid], loader.context))
+
+            if not story_items:
+                scrape_result["error"] = "No stories available for this user"
+                return scrape_result
+
+            total = len(story_items)
+            downloaded = 0
+
+            # Track files before downloading to identify new ones
+            existing_files = set()
+            for file_path in output_dir.rglob("*"):
+                if file_path.is_file():
+                    existing_files.add(str(file_path))
+
+            for item_index, story_item in enumerate(story_items):
+                try:
+                    if item_index > 0:
+                        delay = random.uniform(self.min_delay, self.max_delay)
+                        self.update_progress(
+                            int((item_index / total) * 90) + 10,
+                            f"Downloading story {item_index + 1}/{total}",
+                        )
+                        time.sleep(delay)
+
+                    # Download story using Instaloader
+                    loader.download_storyitem(story_item, target=str(output_dir))
+
+                    downloaded += 1
+
+                except Exception as e:
+                    logger.warning("Failed to download story item: %s", e)
+                    continue
+
+            # Find newly downloaded files
+            new_files = []
+            for file_path in output_dir.rglob("*"):
+                if file_path.is_file() and str(file_path) not in existing_files:
+                    file_type = FILE_TYPE_IMAGE
+                    if file_path.suffix in [".mp4", ".mov"]:
+                        file_type = FILE_TYPE_VIDEO
+
+                    rel_path = str(file_path.relative_to(self.download_dir))
+                    self.save_file_record(
+                        job_id,
+                        rel_path,
+                        file_type,
+                        file_path.stat().st_size,
+                    )
+                    new_files.append(
+                        {
+                            "file_path": rel_path,
+                            "file_type": file_type,
+                            "file_size": file_path.stat().st_size,
+                        }
+                    )
+                elif str(file_path) not in existing_files and file_path.suffix == ".json":
+                    # Handle metadata files
+                    rel_path = str(file_path.relative_to(self.download_dir))
+                    self.save_file_record(
+                        job_id,
+                        rel_path,
+                        FILE_TYPE_METADATA,
+                        file_path.stat().st_size,
+                    )
+
+            scrape_result["files"] = new_files
+            scrape_result["success"] = True
+            scrape_result["metadata"] = {
+                "platform": "instagram",
+                "type": "stories",
+                "username": username,
+                "items_downloaded": downloaded,
+                "url": url,
+            }
+            self.update_progress(100, f"Downloaded {downloaded} stories")
+
+            return scrape_result
+
+        except Exception as e:
+            logger.exception("Error scraping Instagram stories: %s", url)
+            scrape_result["error"] = str(e)
+            return scrape_result
+
+    def _scrape_highlights(self, url: str, job_id: str) -> dict[str, Any]:
+        """Scrape Instagram highlights from a URL.
+
+        Args:
+            url: Instagram highlights URL
+            job_id: Job ID for tracking
+
+        Returns:
+            Scrape result dictionary
+        """
+        scrape_result: dict[str, Any] = {
+            "success": False,
+            "title": None,
+            "files": [],
+            "metadata": {},
+            "error": None,
+        }
+
+        if not self.session_file or not self.session_file.exists():
+            scrape_result["error"] = "Highlights require authenticated session. Please upload cookies.txt first."
+            return scrape_result
+
+        try:
+            username = self._extract_username(url)
+            if not username:
+                scrape_result["error"] = "Could not extract username from highlights URL"
+                return scrape_result
+
+            scrape_result["title"] = f"@{username} Highlights"
+            self.update_progress(10, f"Loading highlights for @{username}")
+
+            loader = self._get_instaloader()
+
+            try:
+                profile = instaloader.Profile.from_username(loader.context, username)
+            except Exception as e:
+                error_msg = str(e)
+                if "401" in error_msg or "404" in error_msg:
+                    scrape_result["error"] = f"Authentication error: {error_msg}"
+                    return scrape_result
+                raise
+
+            output_dir = self.download_dir / "instagram" / username / "highlights"
+            output_dir.mkdir(parents=True, exist_ok=True)
+
+            # Get highlights
+            highlights = list(profile.get_highlight_reels())
+
+            if not highlights:
+                scrape_result["error"] = "No highlights available for this user"
+                return scrape_result
+
+            total = len(highlights)
+            downloaded = 0
+            all_files = []
+
+            for reel_index, highlight_reel in enumerate(highlights):
+                try:
+                    highlight_title = highlight_reel.title or f"Highlight {reel_index + 1}"
+                    self.update_progress(
+                        int((reel_index / total) * 90) + 10,
+                        f"Downloading: {highlight_title}",
+                    )
+
+                    # Create directory for this highlight
+                    sanitized_title = self.sanitize_filename(highlight_title, max_length=100)
+                    highlight_dir = output_dir / sanitized_title
+                    highlight_dir.mkdir(exist_ok=True)
+
+                    # Track files before downloading
+                    existing_files = set()
+                    for file_path in highlight_dir.iterdir():
+                        if file_path.is_file():
+                            existing_files.add(str(file_path))
+
+                    # Download items in this highlight reel
+                    for item in highlight_reel.get_items():
+                        loader.download_storyitem(item, target=str(highlight_dir))
+
+                    # Find new files
+                    for file_path in highlight_dir.iterdir():
+                        if file_path.is_file() and str(file_path) not in existing_files:
+                            file_type = FILE_TYPE_IMAGE
+                            if file_path.suffix in [".mp4", ".mov"]:
+                                file_type = FILE_TYPE_VIDEO
+                            elif file_path.suffix == ".json":
+                                file_type = FILE_TYPE_METADATA
+
+                            rel_path = str(file_path.relative_to(self.download_dir))
+                            self.save_file_record(
+                                job_id,
+                                rel_path,
+                                file_type,
+                                file_path.stat().st_size,
+                            )
+                            all_files.append(
+                                {
+                                    "file_path": rel_path,
+                                    "file_type": file_type,
+                                    "file_size": file_path.stat().st_size,
+                                }
+                            )
+
+                    downloaded += 1
+
+                    if reel_index < total - 1:
+                        delay = random.uniform(self.min_delay, self.max_delay)
+                        time.sleep(delay)
+
+                except Exception as e:
+                    logger.warning("Failed to download highlight reel: %s", e)
+                    continue
+
+            scrape_result["files"] = all_files
+            scrape_result["success"] = True
+            scrape_result["metadata"] = {
+                "platform": "instagram",
+                "type": "highlights",
+                "username": username,
+                "reels_downloaded": downloaded,
+                "url": url,
+            }
+            self.update_progress(100, f"Downloaded {downloaded} highlight reels")
+
+            return scrape_result
+
+        except Exception as e:
+            logger.exception("Error scraping Instagram highlights: %s", url)
+            scrape_result["error"] = str(e)
+            return scrape_result
