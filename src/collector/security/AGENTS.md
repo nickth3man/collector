@@ -34,6 +34,12 @@ Use this module to enforce CSRF checks and block path traversal.
   - outside base dir -> `403`
   - missing or non-file path -> `404`
 
+### Type Checking
+- Security functions must have complete type annotations
+- Use `Flask.Request` type for Flask request objects
+- Path functions should accept and return `Path` objects
+- Run `uvx ty check` to verify security boundary types
+
 ## WHERE TO LOOK
 - Add CSRF to a route: `security/csrf.py` -> `validate_csrf_request`, `csrf_protected`
 - Debug missing CSRF token handling: `security/csrf.py` -> `extract_csrf_token`

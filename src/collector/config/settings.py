@@ -29,7 +29,9 @@ class Config:
     SCRAPER_IG_DELAY_MAX: float = float(os.environ.get("SCRAPER_IG_DELAY_MAX", "10.0"))
 
     # Disk space warnings (in MB)
-    SCRAPER_DISK_WARN_MB: int = int(os.environ.get("SCRAPER_DISK_WARN_MB", str(DEFAULT_DISK_WARNING_MB)))
+    SCRAPER_DISK_WARN_MB: int = int(
+        os.environ.get("SCRAPER_DISK_WARN_MB", str(DEFAULT_DISK_WARNING_MB))
+    )
 
     # Security - Flask
     SECRET_KEY: str = os.environ.get("FLASK_SECRET_KEY", "dev-secret-key-change-in-production")
@@ -73,8 +75,13 @@ class Config:
                 errors.append(f"Cannot create download directory {cls.SCRAPER_DOWNLOAD_DIR}: {e}")
 
         # Validate numeric ranges
-        if cls.SCRAPER_MAX_CONCURRENT < cls.MIN_CONCURRENT_JOBS or cls.SCRAPER_MAX_CONCURRENT > cls.MAX_CONCURRENT_JOBS:
-            errors.append(f"SCRAPER_MAX_CONCURRENT must be between {cls.MIN_CONCURRENT_JOBS} and {cls.MAX_CONCURRENT_JOBS}")
+        if (
+            cls.SCRAPER_MAX_CONCURRENT < cls.MIN_CONCURRENT_JOBS
+            or cls.SCRAPER_MAX_CONCURRENT > cls.MAX_CONCURRENT_JOBS
+        ):
+            errors.append(
+                f"SCRAPER_MAX_CONCURRENT must be between {cls.MIN_CONCURRENT_JOBS} and {cls.MAX_CONCURRENT_JOBS}"
+            )
 
         if cls.SCRAPER_IG_DELAY_MIN < 0:
             errors.append("SCRAPER_IG_DELAY_MIN must be non-negative")

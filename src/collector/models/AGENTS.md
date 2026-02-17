@@ -25,6 +25,13 @@ They support repository and service code with field contracts, conversion helper
 - Keep models free of DB connection logic.
 - Repository layer owns actual schema creation and migration decisions.
 
+### Type Checking
+- All model fields must have type annotations
+- Use `from __future__ import annotations` for forward references
+- Prefer `| None` over `Optional[T]` for nullable types
+- Import types from `collections.abc` when possible (`Mapping`, `Sequence`)
+- Run `uvx ty check` to verify type correctness
+
 ## WHERE TO LOOK
 
 - Add shared fields/behavior used by multiple models: `models/base.py`.

@@ -24,26 +24,14 @@ class Job(BaseModel):
 
     # Index definitions for performance
     indexes: ClassVar[list[dict[str, Any]]] = [
-        {
-            "columns": ["status"],
-            "unique": False,
-            "name": "idx_jobs_status"
-        },
-        {
-            "columns": ["platform"],
-            "unique": False,
-            "name": "idx_jobs_platform"
-        },
-        {
-            "columns": [("created_at", "DESC")],
-            "unique": False,
-            "name": "idx_jobs_created_at"
-        },
+        {"columns": ["status"], "unique": False, "name": "idx_jobs_status"},
+        {"columns": ["platform"], "unique": False, "name": "idx_jobs_platform"},
+        {"columns": [("created_at", "DESC")], "unique": False, "name": "idx_jobs_created_at"},
         {
             "columns": ["status", ("created_at", "DESC")],
             "unique": False,
-            "name": "idx_jobs_status_created"
-        }
+            "name": "idx_jobs_status_created",
+        },
     ]
 
     def __init__(self, **kwargs: Any) -> None:

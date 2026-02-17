@@ -24,6 +24,12 @@ Each module owns one route domain and delegates business logic to services.
 - **Response split:** HTMX paths return fragments or short HTML/error payloads, full requests redirect or render templates.
 - **Service boundary:** routes orchestrate request/response only, heavy logic lives in service layer.
 
+### Type Checking
+- Route handler return types should be explicit: `str`, `Response`, `tuple[str, int]`
+- Import Flask types: `Request`, `Response`, `Blueprint`
+- Service dependencies should be typed at module level
+- Run `uvx ty check` to verify Flask type usage
+
 ## ANTI-PATTERNS
 
 - Skipping CSRF checks on any mutating endpoint.

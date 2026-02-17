@@ -27,6 +27,12 @@ Defaults come from environment variables, then validated through `Config.validat
 - Directory creation checks live in config layer (`validate`, `ensure_directories`, DB path parent creation).
 - Keep constants that shape behavior close to settings, URL patterns, status enums, file-type enums.
 
+### Type Checking
+- All config attributes must be type-annotated at class level
+- Environment variable defaults must match type annotations
+- Use `Path` type for filesystem paths, not `str`
+- Run `uvx ty check` before committing config changes
+
 ## WHERE TO LOOK
 
 - Add new app setting: `config/settings.py` inside `Config` with env key, default, and type cast.

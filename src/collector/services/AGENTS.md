@@ -20,6 +20,12 @@ Keep HTTP concerns out, keep SQL out, keep cross-repository logic here.
 - Use logging for operational visibility, include job/session identifiers in messages.
 - Use UTC ISO timestamps for completion or lifecycle markers.
 
+### Type Checking
+- All service methods must have type annotations
+- Constructor parameters should be typed with concrete classes or protocols
+- Return types should be explicit, avoid bare `dict` (use `dict[str, Any]` or structured TypedDict)
+- Run `uvx ty check` before committing service changes
+
 - `JobService` patterns:
 - Enforce update allowlist in `update_job`, reject unknown fields.
 - Use repository methods for status/progress/statistics mutations.

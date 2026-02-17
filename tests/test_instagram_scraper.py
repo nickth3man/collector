@@ -61,8 +61,13 @@ class TestInstagramScraper:
 
     def test_detect_url_type_highlights(self, scraper):
         """Test highlights URL detection."""
-        assert scraper._detect_url_type("https://www.instagram.com/highlights/username/") == "highlights"
-        assert scraper._detect_url_type("https://instagram.com/highlights/username/") == "highlights"
+        assert (
+            scraper._detect_url_type("https://www.instagram.com/highlights/username/")
+            == "highlights"
+        )
+        assert (
+            scraper._detect_url_type("https://instagram.com/highlights/username/") == "highlights"
+        )
 
     def test_scrape_stories_requires_session(self, scraper):
         """Test that stories scraping requires an authenticated session."""
@@ -75,4 +80,3 @@ class TestInstagramScraper:
         result = scraper._scrape_highlights("https://www.instagram.com/highlights/test/", "job-123")
         assert not result["success"]
         assert "authenticated session" in result["error"].lower()
-

@@ -40,7 +40,9 @@ class SessionService:
             try:
                 config_dir = Path(current_app.config.get("SCRAPER_DOWNLOAD_DIR", "./downloads"))
                 encryption_key = current_app.config.get("SCRAPER_SESSION_KEY")
-                self.session_manager = SessionManager(config_dir=config_dir, encryption_key=encryption_key)
+                self.session_manager = SessionManager(
+                    config_dir=config_dir, encryption_key=encryption_key
+                )
             except RuntimeError:
                 self.session_manager = None
 

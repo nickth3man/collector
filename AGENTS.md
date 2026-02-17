@@ -17,7 +17,6 @@ Flask web application for downloading media from Instagram and YouTube with real
 ```
 ./
 ├── wsgi.py                 # Thin entry point (imports from collector package)
-├── config.py               # Backward-compat config exports
 ├── src/
 │   └── collector/          # Main package
 │       ├── __init__.py     # create_app(), signal handlers
@@ -27,10 +26,11 @@ Flask web application for downloading media from Instagram and YouTube with real
 │       ├── services/       # Business logic layer
 │       ├── repositories/   # Data access layer
 │       ├── scrapers/       # YouTube + Instagram scrapers
-│       └── security/       # CSRF, path traversal protection
-├── templates/              # Jinja2 + HTMX templates
-├── static/                 # CDN-first assets with local fallback
+│       ├── security/       # CSRF, path traversal protection
+│       ├── templates/      # Jinja2 + HTMX templates
+│       └── static/         # CDN-first assets with local fallback
 ├── tests/                  # pytest suite
+├── scripts/                # Dev tooling (screenshot capture)
 └── downloads/              # Downloaded content storage
 ```
 
@@ -44,7 +44,7 @@ Flask web application for downloading media from Instagram and YouTube with real
 | Modify download logic | `src/collector/scrapers/` | Extend `BaseScraper` abstract class |
 | Change database schema | `src/collector/repositories/` + `models/` | Repository creates tables in `__init__` |
 | Add API endpoint | `src/collector/routes/api.py` | JSON API routes |
-| Update UI | `templates/` | HTMX fragments in `partials/` |
+| Update UI | `src/collector/templates/` | HTMX fragments in `partials/` |
 | Job management | `src/collector/services/job_service.py` | Background task coordination |
 | Security utils | `src/collector/security/` | CSRF tokens, path validation |
 
@@ -53,10 +53,12 @@ Flask web application for downloading media from Instagram and YouTube with real
 ## CONVENTIONS
 
 ### Code Style
-- **Line length:** 100 (Black + Ruff configured)
+- **Line length:** 100 (Ruff configured)
 - **Python:** 3.10+ with `from __future__ import annotations`
 - **Types:** Use type hints, `| None` syntax, `collections.abc` imports
-- **Formatting:** Black with Ruff linting (E, F, W, I, N, UP, B)
+- **Formatting:** Ruff formatter (Black-compatible, 10-100x faster)
+- **Linting:** Ruff (E, F, W, I, N, UP, B)
+- **Type checking:** ty (10-100x faster than mypy/Pyright)
 
 ### Naming
 - **Files:** `snake_case.py`
@@ -115,9 +117,16 @@ uv run python -m collector
 uv run pytest
 uv run pytest --cov
 
+# Formatting
+uv run ruff format .
+
 # Linting
-uv run black .
 uv run ruff check .
+uv run ruff check --fix .  # Auto-fix issues
+
+# Type checking
+uv run ty check
+uvx ty check  # Fast one-off check
 
 # Production
 uv run gunicorn -w 1 -t 120 wsgi:app

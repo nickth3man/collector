@@ -37,11 +37,7 @@ class TestJobsRoutes:
         mock_job_service.return_value.create_job.return_value = test_job
         mock_executor_adapter.return_value.submit_job.return_value = None
 
-        response = client.post(
-            "/download",
-            data={"url": test_url},
-            headers={"HX-Request": "true"}
-        )
+        response = client.post("/download", data={"url": test_url}, headers={"HX-Request": "true"})
 
         assert response.status_code == 200
         mock_scraper_service.return_value.validate_url.assert_called_once_with(test_url)
@@ -69,43 +65,27 @@ class TestJobsRoutes:
         mock_job_service.return_value.create_job.return_value = test_job
         mock_executor_adapter.return_value.submit_job.return_value = None
 
-        response = client.post(
-            "/download",
-            data={"url": test_url},
-            follow_redirects=False
-        )
+        response = client.post("/download", data={"url": test_url}, follow_redirects=False)
 
         assert response.status_code == 302
         assert response.headers["Location"].endswith("/")
 
-    def test_download_with_invalid_url_htmx(
-        self, client, mock_scraper_service, auto_mock_csrf
-    ):
+    def test_download_with_invalid_url_htmx(self, client, mock_scraper_service, auto_mock_csrf):
         """Test download route with invalid URL via HTMX."""
         test_url = "not-a-valid-url"
         mock_scraper_service.return_value.validate_url.return_value = (False, "Invalid URL format")
 
-        response = client.post(
-            "/download",
-            data={"url": test_url},
-            headers={"HX-Request": "true"}
-        )
+        response = client.post("/download", data={"url": test_url}, headers={"HX-Request": "true"})
 
         assert response.status_code == 400
         assert b"Invalid URL format" in response.data
 
-    def test_download_with_invalid_url_regular(
-        self, client, mock_scraper_service, auto_mock_csrf
-    ):
+    def test_download_with_invalid_url_regular(self, client, mock_scraper_service, auto_mock_csrf):
         """Test download route with invalid URL via regular request."""
         test_url = "not-a-valid-url"
         mock_scraper_service.return_value.validate_url.return_value = (False, "Invalid URL format")
 
-        response = client.post(
-            "/download",
-            data={"url": test_url},
-            follow_redirects=False
-        )
+        response = client.post("/download", data={"url": test_url}, follow_redirects=False)
 
         assert response.status_code == 302
 
@@ -117,11 +97,7 @@ class TestJobsRoutes:
         mock_scraper_service.return_value.validate_url.return_value = (True, None)
         mock_scraper_service.return_value.detect_platform.return_value = None
 
-        response = client.post(
-            "/download",
-            data={"url": test_url},
-            headers={"HX-Request": "true"}
-        )
+        response = client.post("/download", data={"url": test_url}, headers={"HX-Request": "true"})
 
         assert response.status_code == 400
         assert b"Could not detect platform" in response.data
@@ -131,7 +107,7 @@ class TestJobsRoutes:
         response = client.post(
             "/download",
             data={"url": "https://youtube.com/watch?v=test"},
-            headers={"HX-Request": "true"}
+            headers={"HX-Request": "true"},
         )
 
         assert response.status_code == 403
@@ -251,34 +227,24 @@ class TestJobsRoutes:
     # POST /job/<job_id>/cancel tests
     # ========================================================================
 
-    def test_cancel_job_success_htmx(
-        self, client, mock_job_service, sample_job, auto_mock_csrf
-    ):
+    def test_cancel_job_success_htmx(self, client, mock_job_service, sample_job, auto_mock_csrf):
         """Test successful job cancellation via HTMX."""
         mock_job_service.return_value.get_job.return_value = sample_job
         mock_job_service.return_value.cancel_job.return_value = True
 
         response = client.post(
-            f"/job/{sample_job.id}/cancel",
-            data={},
-            headers={"HX-Request": "true"}
+            f"/job/{sample_job.id}/cancel", data={}, headers={"HX-Request": "true"}
         )
 
         assert response.status_code == 204
         assert response.data == b""
 
-    def test_cancel_job_success_regular(
-        self, client, mock_job_service, sample_job, auto_mock_csrf
-    ):
+    def test_cancel_job_success_regular(self, client, mock_job_service, sample_job, auto_mock_csrf):
         """Test successful job cancellation via regular request."""
         mock_job_service.return_value.get_job.return_value = sample_job
         mock_job_service.return_value.cancel_job.return_value = True
 
-        response = client.post(
-            f"/job/{sample_job.id}/cancel",
-            data={},
-            follow_redirects=False
-        )
+        response = client.post(f"/job/{sample_job.id}/cancel", data={}, follow_redirects=False)
 
         assert response.status_code == 302
 
@@ -290,9 +256,7 @@ class TestJobsRoutes:
         mock_job_service.return_value.cancel_job.return_value = False
 
         response = client.post(
-            f"/job/{sample_job.id}/cancel",
-            data={},
-            headers={"HX-Request": "true"}
+            f"/job/{sample_job.id}/cancel", data={}, headers={"HX-Request": "true"}
         )
 
         # Note: Current implementation redirects even with HTMX
@@ -302,10 +266,7 @@ class TestJobsRoutes:
         """Test cancelling a non-existent job."""
         mock_job_service.return_value.get_job.return_value = None
 
-        response = client.post(
-            "/job/nonexistent-job/cancel",
-            data={}
-        )
+        response = client.post("/job/nonexistent-job/cancel", data={})
 
         assert response.status_code == 404
 
@@ -336,11 +297,7 @@ class TestJobsRoutes:
         mock_job_service.return_value.prepare_retry_job.return_value = test_job
         mock_executor_adapter.return_value.submit_job.return_value = None
 
-        response = client.post(
-            "/job/job-123/retry",
-            data={},
-            headers={"HX-Request": "true"}
-        )
+        response = client.post("/job/job-123/retry", data={}, headers={"HX-Request": "true"})
 
         assert response.status_code == 200
 
@@ -361,11 +318,7 @@ class TestJobsRoutes:
         mock_job_service.return_value.prepare_retry_job.return_value = test_job
         mock_executor_adapter.return_value.submit_job.return_value = None
 
-        response = client.post(
-            "/job/job-123/retry",
-            data={},
-            follow_redirects=False
-        )
+        response = client.post("/job/job-123/retry", data={}, follow_redirects=False)
 
         assert response.status_code == 302
 
@@ -373,11 +326,7 @@ class TestJobsRoutes:
         """Test retrying a job that is not in failed state."""
         mock_job_service.return_value.prepare_retry_job.return_value = None
 
-        response = client.post(
-            "/job/job-123/retry",
-            data={},
-            follow_redirects=False
-        )
+        response = client.post("/job/job-123/retry", data={}, follow_redirects=False)
 
         assert response.status_code == 302
 
@@ -391,60 +340,36 @@ class TestJobsRoutes:
     # DELETE /job/<job_id> tests
     # ========================================================================
 
-    def test_delete_job_success_htmx(
-        self, client, mock_job_service, auto_mock_csrf
-    ):
+    def test_delete_job_success_htmx(self, client, mock_job_service, auto_mock_csrf):
         """Test successful job deletion via HTMX."""
         mock_job_service.return_value.delete_job.return_value = True
 
-        response = client.delete(
-            "/job/job-123",
-            data={},
-            headers={"HX-Request": "true"}
-        )
+        response = client.delete("/job/job-123", data={}, headers={"HX-Request": "true"})
 
         assert response.status_code == 204
         assert response.data == b""
 
-    def test_delete_job_success_regular(
-        self, client, mock_job_service, auto_mock_csrf
-    ):
+    def test_delete_job_success_regular(self, client, mock_job_service, auto_mock_csrf):
         """Test successful job deletion via regular request."""
         mock_job_service.return_value.delete_job.return_value = True
 
-        response = client.delete(
-            "/job/job-123",
-            data={},
-            follow_redirects=False
-        )
+        response = client.delete("/job/job-123", data={}, follow_redirects=False)
 
         assert response.status_code == 302
 
-    def test_delete_job_not_found_htmx(
-        self, client, mock_job_service, auto_mock_csrf
-    ):
+    def test_delete_job_not_found_htmx(self, client, mock_job_service, auto_mock_csrf):
         """Test deleting non-existent job via HTMX."""
         mock_job_service.return_value.delete_job.return_value = False
 
-        response = client.delete(
-            "/job/nonexistent-job",
-            data={},
-            headers={"HX-Request": "true"}
-        )
+        response = client.delete("/job/nonexistent-job", data={}, headers={"HX-Request": "true"})
 
         assert response.status_code == 404
 
-    def test_delete_job_not_found_regular(
-        self, client, mock_job_service, auto_mock_csrf
-    ):
+    def test_delete_job_not_found_regular(self, client, mock_job_service, auto_mock_csrf):
         """Test deleting non-existent job via regular request."""
         mock_job_service.return_value.delete_job.return_value = False
 
-        response = client.delete(
-            "/job/nonexistent-job",
-            data={},
-            follow_redirects=False
-        )
+        response = client.delete("/job/nonexistent-job", data={}, follow_redirects=False)
 
         assert response.status_code == 302
 

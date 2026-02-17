@@ -77,7 +77,9 @@ class TestPagesRoutes:
 
         mock_response = Response(b"test content", status=200)
 
-        with patch("collector.routes.pages.safe_send_file", return_value=mock_response) as mock_send:
+        with patch(
+            "collector.routes.pages.safe_send_file", return_value=mock_response
+        ) as mock_send:
             response = client.get("/browse/test.txt")
 
             # For files, safe_send_file is called

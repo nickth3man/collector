@@ -34,6 +34,13 @@ Each repository wraps SQL, maps rows to models, and keeps query rules in one pla
 - Keep SQL close to repository methods, prefer parameterized placeholders (`?`).
 - Put repository-specific filtering logic in repository methods, not in routes or services.
 
+### Type Checking
+- Repository methods must have typed signatures
+- Use generic `BaseRepository[ModelType]` when extending base
+- Database row types should be `dict[str, Any]` when using row factory
+- Return model instances, not raw dicts, from finder methods
+- Run `uvx ty check` to catch model/DB mapping issues
+
 ## ANTI-PATTERNS
 
 - Never execute raw DB queries in routes, go through repositories.

@@ -99,7 +99,9 @@ class InstagramScraper(BaseScraper):
             return "stories"
         elif "/highlights/" in url:
             return "highlights"
-        elif "instagram.com/" in url and not any(x in url for x in ["/p/", "/reel/", "/tv/", "/stories/", "/highlights/"]):
+        elif "instagram.com/" in url and not any(
+            x in url for x in ["/p/", "/reel/", "/tv/", "/stories/", "/highlights/"]
+        ):
             return "profile"
         return "unknown"
 
@@ -655,7 +657,9 @@ class InstagramScraper(BaseScraper):
         }
 
         if not self.session_file or not self.session_file.exists():
-            scrape_result["error"] = "Stories require authenticated session. Please upload cookies.txt first."
+            scrape_result["error"] = (
+                "Stories require authenticated session. Please upload cookies.txt first."
+            )
             return scrape_result
 
         try:
@@ -788,7 +792,9 @@ class InstagramScraper(BaseScraper):
         }
 
         if not self.session_file or not self.session_file.exists():
-            scrape_result["error"] = "Highlights require authenticated session. Please upload cookies.txt first."
+            scrape_result["error"] = (
+                "Highlights require authenticated session. Please upload cookies.txt first."
+            )
             return scrape_result
 
         try:

@@ -85,9 +85,7 @@ def test_route_documentation_coverage():
         for route in undocumented:
             print(f"  - {route['module']}.{route['function']}")
 
-    assert (
-        len(undocumented) == 0
-    ), f"{len(undocumented)} route(s) missing documentation"
+    assert len(undocumented) == 0, f"{len(undocumented)} route(s) missing documentation"
 
     print("\nAll routes have documentation!")
 

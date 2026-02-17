@@ -300,7 +300,9 @@ class YouTubeScraper(BaseScraper):
                     )
 
                     progress = int((video_index + 1) / total * 100)
-                    self.update_progress(progress, f"Processing {video_index + 1}/{total}: {video_title}")
+                    self.update_progress(
+                        progress, f"Processing {video_index + 1}/{total}: {video_title}"
+                    )
 
                 scrape_result["success"] = True
                 self.update_progress(100, f"Found {total} videos in playlist")

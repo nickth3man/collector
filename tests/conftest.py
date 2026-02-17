@@ -33,6 +33,7 @@ def app_config_overrides() -> dict[str, str]:
 # Flask App Fixtures
 # ============================================================================
 
+
 @pytest.fixture
 def app(app_config_overrides: dict[str, str], tmp_db_path: Path, tmp_download_dir: Path):
     """Create Flask app for testing with test configuration."""
@@ -85,10 +86,12 @@ def runner(app):
 # Service Mock Fixtures
 # ============================================================================
 
+
 @pytest.fixture
 def mock_job_service():
     """Mock JobService."""
     from unittest.mock import patch
+
     with patch("collector.routes.jobs.JobService") as mock:
         yield mock
 
@@ -97,6 +100,7 @@ def mock_job_service():
 def mock_job_service_for_pages():
     """Mock JobService for pages routes."""
     from unittest.mock import patch
+
     with patch("collector.routes.pages.JobService") as mock:
         yield mock
 
@@ -105,6 +109,7 @@ def mock_job_service_for_pages():
 def mock_scraper_service():
     """Mock ScraperService."""
     from unittest.mock import patch
+
     with patch("collector.routes.jobs.ScraperService") as mock:
         yield mock
 
@@ -113,6 +118,7 @@ def mock_scraper_service():
 def mock_session_service():
     """Mock SessionService."""
     from unittest.mock import patch
+
     with patch("collector.routes.sessions.SessionService") as mock:
         yield mock
 
@@ -121,6 +127,7 @@ def mock_session_service():
 def mock_executor_adapter():
     """Mock ExecutorAdapter."""
     from unittest.mock import patch
+
     with patch("collector.routes.jobs.ExecutorAdapter") as mock:
         yield mock
 
@@ -129,11 +136,13 @@ def mock_executor_adapter():
 # CSRF Token Fixtures
 # ============================================================================
 
+
 @pytest.fixture
 def csrf_token(client):
     """Get valid CSRF token from session."""
     with client.session_transaction() as sess:
         from collector.security.csrf import generate_csrf_token
+
         token = generate_csrf_token()
         sess["_csrf_token"] = token
         # Also make it available as a regular session attribute
@@ -150,19 +159,19 @@ def csrf_headers(csrf_token: str):
 @pytest.fixture
 def htmx_headers(csrf_token: str):
     """Headers for HTMX requests including CSRF token."""
-    return {
-        "X-CSRFToken": csrf_token,
-        "HX-Request": "true"
-    }
+    return {"X-CSRFToken": csrf_token, "HX-Request": "true"}
 
 
 @pytest.fixture
 def mock_csrf_validation():
     """Mock CSRF validation to always pass for tests."""
     from unittest.mock import patch
+
     # Patch at the import locations in the route modules
-    with patch("collector.routes.jobs.validate_csrf_request", return_value=True), \
-         patch("collector.routes.sessions.validate_csrf_request", return_value=True):
+    with (
+        patch("collector.routes.jobs.validate_csrf_request", return_value=True),
+        patch("collector.routes.sessions.validate_csrf_request", return_value=True),
+    ):
         yield
 
 
@@ -170,9 +179,12 @@ def mock_csrf_validation():
 def auto_mock_csrf():
     """Mock CSRF validation for tests (use explicitly for non-CSRF tests)."""
     from unittest.mock import patch
+
     # Patch at the import locations in the route modules
-    with patch("collector.routes.jobs.validate_csrf_request", return_value=True), \
-         patch("collector.routes.sessions.validate_csrf_request", return_value=True):
+    with (
+        patch("collector.routes.jobs.validate_csrf_request", return_value=True),
+        patch("collector.routes.sessions.validate_csrf_request", return_value=True),
+    ):
         yield
 
 
@@ -180,13 +192,18 @@ def auto_mock_csrf():
 def auto_mock_templates():
     """Automatically mock template rendering for tests."""
     from unittest.mock import patch
-    # Return HTML string that Flask will wrap in a response
-    mock_html = "<div>Mock template response with <input name='csrf_token' value='test-token'/></div>"
 
-    with patch("collector.routes.jobs.render_template", return_value=mock_html), \
-         patch("collector.routes.pages.render_template", return_value=mock_html), \
-         patch("collector.routes.sessions.render_template", return_value=mock_html), \
-         patch("flask.render_template", return_value=mock_html):
+    # Return HTML string that Flask will wrap in a response
+    mock_html = (
+        "<div>Mock template response with <input name='csrf_token' value='test-token'/></div>"
+    )
+
+    with (
+        patch("collector.routes.jobs.render_template", return_value=mock_html),
+        patch("collector.routes.pages.render_template", return_value=mock_html),
+        patch("collector.routes.sessions.render_template", return_value=mock_html),
+        patch("flask.render_template", return_value=mock_html),
+    ):
         yield
 
 
@@ -194,10 +211,12 @@ def auto_mock_templates():
 # Test Data Fixtures
 # ============================================================================
 
+
 @pytest.fixture
 def sample_job():
     """Sample job object for testing."""
     from collector.models.job import Job
+
     return Job(
         id="test-job-123",
         url="https://www.youtube.com/watch?v=test123",
@@ -213,6 +232,7 @@ def sample_job():
 def sample_file():
     """Sample file object for testing."""
     from collector.models.file import File
+
     return File(
         id=1,
         job_id="test-job-123",

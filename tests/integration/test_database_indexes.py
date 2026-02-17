@@ -28,14 +28,15 @@ def test_jobs_indexes_exist(app):
 
             # Verify expected indexes exist
             expected_indexes = {
-                'idx_jobs_status',
-                'idx_jobs_platform',
-                'idx_jobs_created_at',
-                'idx_jobs_status_created'
+                "idx_jobs_status",
+                "idx_jobs_platform",
+                "idx_jobs_created_at",
+                "idx_jobs_status_created",
             }
 
-            assert expected_indexes.issubset(index_names), \
+            assert expected_indexes.issubset(index_names), (
                 f"Missing indexes: {expected_indexes - index_names}"
+            )
 
 
 def test_files_indexes_exist(app):
@@ -56,14 +57,15 @@ def test_files_indexes_exist(app):
 
             # Verify expected indexes exist
             expected_indexes = {
-                'idx_files_job_id',
-                'idx_files_file_type',
-                'idx_files_created_at',
-                'idx_files_job_id_type'
+                "idx_files_job_id",
+                "idx_files_file_type",
+                "idx_files_created_at",
+                "idx_files_job_id_type",
             }
 
-            assert expected_indexes.issubset(index_names), \
+            assert expected_indexes.issubset(index_names), (
                 f"Missing indexes: {expected_indexes - index_names}"
+            )
 
 
 def test_settings_has_no_custom_indexes(app):
@@ -111,8 +113,9 @@ def test_index_usage_on_active_jobs(app):
             plan_str = str(plan_list)
 
             # The query plan should use an index (either idx_jobs_status or idx_jobs_status_created)
-            assert 'INDEX' in plan_str.upper() or 'idx_jobs' in plan_str, \
+            assert "INDEX" in plan_str.upper() or "idx_jobs" in plan_str, (
                 f"Query should use an index. Plan: {plan_list}"
+            )
 
 
 def test_index_usage_on_job_files(app):
@@ -134,16 +137,16 @@ def test_index_usage_on_job_files(app):
 
         with db_config.get_connection() as conn:
             plan = conn.execute(
-                f"EXPLAIN QUERY PLAN "
-                f"SELECT * FROM files WHERE job_id = '{job.id}'"
+                f"EXPLAIN QUERY PLAN SELECT * FROM files WHERE job_id = '{job.id}'"
             ).fetchall()
 
             # Verify index is used
             plan_list = [dict(row) for row in plan]
             plan_str = str(plan_list)
 
-            assert 'INDEX' in plan_str.upper() or 'idx_files' in plan_str, \
+            assert "INDEX" in plan_str.upper() or "idx_files" in plan_str, (
                 f"Query should use idx_files_job_id index. Plan: {plan_list}"
+            )
 
 
 def test_index_usage_on_recent_jobs(app):
@@ -163,8 +166,7 @@ def test_index_usage_on_recent_jobs(app):
 
         with db_config.get_connection() as conn:
             plan = conn.execute(
-                "EXPLAIN QUERY PLAN "
-                "SELECT * FROM jobs ORDER BY created_at DESC LIMIT 10"
+                "EXPLAIN QUERY PLAN SELECT * FROM jobs ORDER BY created_at DESC LIMIT 10"
             ).fetchall()
 
             # Verify index is used
@@ -172,8 +174,11 @@ def test_index_usage_on_recent_jobs(app):
             plan_str = str(plan_list)
 
             # The query should use an index on created_at
-            assert 'INDEX' in plan_str.upper() or 'B-tree' in plan_str.upper() or 'idx_jobs' in plan_str, \
-                f"Query should use an index. Plan: {plan_list}"
+            assert (
+                "INDEX" in plan_str.upper()
+                or "B-tree" in plan_str.upper()
+                or "idx_jobs" in plan_str
+            ), f"Query should use an index. Plan: {plan_list}"
 
 
 def test_index_usage_on_job_statistics(app):
@@ -193,16 +198,16 @@ def test_index_usage_on_job_statistics(app):
 
         with db_config.get_connection() as conn:
             plan = conn.execute(
-                "EXPLAIN QUERY PLAN "
-                "SELECT status, COUNT(*) as count FROM jobs GROUP BY status"
+                "EXPLAIN QUERY PLAN SELECT status, COUNT(*) as count FROM jobs GROUP BY status"
             ).fetchall()
 
             # Verify index is used
             plan_list = [dict(row) for row in plan]
             plan_str = str(plan_list)
 
-            assert 'INDEX' in plan_str.upper() or 'idx_jobs' in plan_str, \
+            assert "INDEX" in plan_str.upper() or "idx_jobs" in plan_str, (
                 f"Query should use idx_jobs_status index. Plan: {plan_list}"
+            )
 
 
 def test_get_index_info_method(app):

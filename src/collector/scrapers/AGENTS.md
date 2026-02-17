@@ -22,6 +22,12 @@ Each scraper extends one contract, returns one result shape, reports progress fo
 - Keep platform detection/routing inside scraper (`_detect_url_type`, playlist detection, etc.)
 - Keep platform-specific parsing private (`_extract_*`, `_fetch_*`, `_download_*`)
 
+### Type Checking
+- Annotate all public method signatures with types
+- Use `dict[str, Any]` for scraper result dicts  
+- Abstract methods from `BaseScraper` must match parent signature exactly
+- Run `uvx ty check` to catch signature mismatches
+
 ### YouTube Pattern
 - Primary downloader: `yt_dlp.YoutubeDL`
 - Supports single video plus playlist/channel metadata paths

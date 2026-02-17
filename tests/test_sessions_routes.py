@@ -14,11 +14,13 @@ class TestSessionsRoutes:
     # GET /sessions tests
     # ========================================================================
 
-    def test_list_sessions_success(self, client, mock_session_service, sample_session, auto_mock_csrf):
+    def test_list_sessions_success(
+        self, client, mock_session_service, sample_session, auto_mock_csrf
+    ):
         """Test successfully listing sessions."""
         mock_session_service.return_value.list_sessions.return_value = {
             "success": True,
-            "sessions": [sample_session]
+            "sessions": [sample_session],
         }
 
         response = client.get("/sessions")
@@ -30,7 +32,7 @@ class TestSessionsRoutes:
         """Test listing sessions when none exist."""
         mock_session_service.return_value.list_sessions.return_value = {
             "success": True,
-            "sessions": []
+            "sessions": [],
         }
 
         response = client.get("/sessions")
@@ -42,7 +44,7 @@ class TestSessionsRoutes:
         """Test listing sessions when service returns error."""
         mock_session_service.return_value.list_sessions.return_value = {
             "success": False,
-            "error": "Database error"
+            "error": "Database error",
         }
 
         response = client.get("/sessions")
@@ -62,67 +64,53 @@ class TestSessionsRoutes:
     # POST /sessions/upload tests
     # ========================================================================
 
-    def test_upload_session_success_htmx(
-        self, client, mock_session_service, auto_mock_csrf
-    ):
+    def test_upload_session_success_htmx(self, client, mock_session_service, auto_mock_csrf):
         """Test successful session upload via HTMX."""
         cookies_content = "cookie1=value1\ncookie2=value2"
         cookies_file = (BytesIO(cookies_content.encode()), "cookies.txt")
 
         mock_session_service.return_value.upload_session.return_value = {
             "success": True,
-            "username": "testuser"
+            "username": "testuser",
         }
 
         response = client.post(
             "/sessions/upload",
             data={"cookies_file": cookies_file},
             headers={"HX-Request": "true"},
-            content_type="multipart/form-data"
+            content_type="multipart/form-data",
         )
 
         assert response.status_code == 200
         assert b"success" in response.data.lower() or b"uploaded" in response.data.lower()
         mock_session_service.return_value.upload_session.assert_called_once()
 
-    def test_upload_session_success_regular(
-        self, client, mock_session_service, auto_mock_csrf
-    ):
+    def test_upload_session_success_regular(self, client, mock_session_service, auto_mock_csrf):
         """Test successful session upload via regular request."""
         cookies_content = "cookie1=value1\ncookie2=value2"
         cookies_file = (BytesIO(cookies_content.encode()), "cookies.txt")
 
         mock_session_service.return_value.upload_session.return_value = {
             "success": True,
-            "username": "testuser"
+            "username": "testuser",
         }
 
         response = client.post(
-            "/sessions/upload",
-            data={"cookies_file": cookies_file},
-            follow_redirects=False
+            "/sessions/upload", data={"cookies_file": cookies_file}, follow_redirects=False
         )
 
         assert response.status_code == 302
 
     def test_upload_session_no_file_htmx(self, client, auto_mock_csrf):
         """Test upload with no file uploaded via HTMX."""
-        response = client.post(
-            "/sessions/upload",
-            data={},
-            headers={"HX-Request": "true"}
-        )
+        response = client.post("/sessions/upload", data={}, headers={"HX-Request": "true"})
 
         assert response.status_code == 400
         assert b"no file" in response.data.lower()
 
     def test_upload_session_no_file_regular(self, client, auto_mock_csrf):
         """Test upload with no file uploaded via regular request."""
-        response = client.post(
-            "/sessions/upload",
-            data={},
-            follow_redirects=False
-        )
+        response = client.post("/sessions/upload", data={}, follow_redirects=False)
 
         assert response.status_code == 302
 
@@ -134,7 +122,7 @@ class TestSessionsRoutes:
             "/sessions/upload",
             data={"cookies_file": empty_file},
             headers={"HX-Request": "true"},
-            content_type="multipart/form-data"
+            content_type="multipart/form-data",
         )
 
         assert response.status_code == 400
@@ -148,37 +136,33 @@ class TestSessionsRoutes:
             "/sessions/upload",
             data={"cookies_file": wrong_file},
             headers={"HX-Request": "true"},
-            content_type="multipart/form-data"
+            content_type="multipart/form-data",
         )
 
         assert response.status_code == 400
         assert b".txt" in response.data.lower()
 
-    def test_upload_session_service_error_htmx(
-        self, client, mock_session_service, auto_mock_csrf
-    ):
+    def test_upload_session_service_error_htmx(self, client, mock_session_service, auto_mock_csrf):
         """Test upload when service returns error via HTMX."""
         cookies_content = "cookie1=value1"
         cookies_file = (BytesIO(cookies_content.encode()), "cookies.txt")
 
         mock_session_service.return_value.upload_session.return_value = {
             "success": False,
-            "error": "Invalid cookies format"
+            "error": "Invalid cookies format",
         }
 
         response = client.post(
             "/sessions/upload",
             data={"cookies_file": cookies_file},
             headers={"HX-Request": "true"},
-            content_type="multipart/form-data"
+            content_type="multipart/form-data",
         )
 
         assert response.status_code == 400
         assert b"invalid cookies format" in response.data.lower()
 
-    def test_upload_session_exception_htmx(
-        self, client, mock_session_service, auto_mock_csrf
-    ):
+    def test_upload_session_exception_htmx(self, client, mock_session_service, auto_mock_csrf):
         """Test upload when service raises exception via HTMX."""
         cookies_content = "cookie1=value1"
         cookies_file = (BytesIO(cookies_content.encode()), "cookies.txt")
@@ -189,7 +173,7 @@ class TestSessionsRoutes:
             "/sessions/upload",
             data={"cookies_file": cookies_file},
             headers={"HX-Request": "true"},
-            content_type="multipart/form-data"
+            content_type="multipart/form-data",
         )
 
         assert response.status_code == 500
@@ -211,85 +195,53 @@ class TestSessionsRoutes:
     # POST /sessions/<username>/delete tests
     # ========================================================================
 
-    def test_delete_session_success_htmx(
-        self, client, mock_session_service, auto_mock_csrf
-    ):
+    def test_delete_session_success_htmx(self, client, mock_session_service, auto_mock_csrf):
         """Test successful session deletion via HTMX."""
-        mock_session_service.return_value.delete_session.return_value = {
-            "success": True
-        }
+        mock_session_service.return_value.delete_session.return_value = {"success": True}
 
-        response = client.post(
-            "/sessions/testuser/delete",
-            data={},
-            headers={"HX-Request": "true"}
-        )
+        response = client.post("/sessions/testuser/delete", data={}, headers={"HX-Request": "true"})
 
         assert response.status_code == 204
         assert response.data == b""
         mock_session_service.return_value.delete_session.assert_called_once_with("testuser")
 
-    def test_delete_session_success_regular(
-        self, client, mock_session_service, auto_mock_csrf
-    ):
+    def test_delete_session_success_regular(self, client, mock_session_service, auto_mock_csrf):
         """Test successful session deletion via regular request."""
-        mock_session_service.return_value.delete_session.return_value = {
-            "success": True
-        }
+        mock_session_service.return_value.delete_session.return_value = {"success": True}
 
-        response = client.post(
-            "/sessions/testuser/delete",
-            data={},
-            follow_redirects=False
-        )
+        response = client.post("/sessions/testuser/delete", data={}, follow_redirects=False)
 
         assert response.status_code == 302
 
-    def test_delete_session_not_found_htmx(
-        self, client, mock_session_service, auto_mock_csrf
-    ):
+    def test_delete_session_not_found_htmx(self, client, mock_session_service, auto_mock_csrf):
         """Test deleting non-existent session via HTMX."""
         mock_session_service.return_value.delete_session.return_value = {
             "success": False,
-            "error": "Session not found"
+            "error": "Session not found",
         }
 
         response = client.post(
-            "/sessions/nonexistent/delete",
-            data={},
-            headers={"HX-Request": "true"}
+            "/sessions/nonexistent/delete", data={}, headers={"HX-Request": "true"}
         )
 
         assert response.status_code == 404
 
-    def test_delete_session_not_found_regular(
-        self, client, mock_session_service, auto_mock_csrf
-    ):
+    def test_delete_session_not_found_regular(self, client, mock_session_service, auto_mock_csrf):
         """Test deleting non-existent session via regular request."""
         mock_session_service.return_value.delete_session.return_value = {
             "success": False,
-            "error": "Session not found"
+            "error": "Session not found",
         }
 
-        response = client.post(
-            "/sessions/nonexistent/delete",
-            data={},
-            follow_redirects=False
-        )
+        response = client.post("/sessions/nonexistent/delete", data={}, follow_redirects=False)
 
         assert response.status_code == 302
 
-    def test_delete_session_exception_htmx(
-        self, client, mock_session_service, auto_mock_csrf
-    ):
+    def test_delete_session_exception_htmx(self, client, mock_session_service, auto_mock_csrf):
         """Test delete when service raises exception via HTMX."""
         mock_session_service.return_value.delete_session.side_effect = Exception("Database error")
 
-        response = client.post(
-            "/sessions/testuser/delete",
-            data={},
-            headers={"HX-Request": "true"}
-        )
+        response = client.post("/sessions/testuser/delete", data={}, headers={"HX-Request": "true"})
 
         assert response.status_code == 500
         assert b"failed to delete" in response.data.lower()

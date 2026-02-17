@@ -27,26 +27,10 @@ class File(BaseModel):
 
     # Index definitions for performance
     indexes: ClassVar[list[dict[str, Any]]] = [
-        {
-            "columns": ["job_id"],
-            "unique": False,
-            "name": "idx_files_job_id"
-        },
-        {
-            "columns": ["file_type"],
-            "unique": False,
-            "name": "idx_files_file_type"
-        },
-        {
-            "columns": [("created_at", "DESC")],
-            "unique": False,
-            "name": "idx_files_created_at"
-        },
-        {
-            "columns": ["job_id", "file_type"],
-            "unique": False,
-            "name": "idx_files_job_id_type"
-        }
+        {"columns": ["job_id"], "unique": False, "name": "idx_files_job_id"},
+        {"columns": ["file_type"], "unique": False, "name": "idx_files_file_type"},
+        {"columns": [("created_at", "DESC")], "unique": False, "name": "idx_files_created_at"},
+        {"columns": ["job_id", "file_type"], "unique": False, "name": "idx_files_job_id_type"},
     ]
 
     def __init__(self, **kwargs: Any) -> None:

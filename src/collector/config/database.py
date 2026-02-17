@@ -114,9 +114,9 @@ class DatabaseConfig:
                     try:
                         # Extract index name for logging
                         match = re.search(
-                            r'CREATE\s+(?:UNIQUE\s+)?INDEX\s+IF\s+NOT\s+EXISTS\s+(\w+)',
+                            r"CREATE\s+(?:UNIQUE\s+)?INDEX\s+IF\s+NOT\s+EXISTS\s+(\w+)",
                             index_sql,
-                            re.IGNORECASE
+                            re.IGNORECASE,
                         )
                         index_name = match.group(1) if match else "unknown"
 
@@ -161,9 +161,9 @@ class DatabaseConfig:
                 for index_sql in index_sqls:
                     # Extract index name
                     match = re.search(
-                        r'CREATE\s+(?:UNIQUE\s+)?INDEX\s+IF\s+NOT\s+EXISTS\s+(\w+)',
+                        r"CREATE\s+(?:UNIQUE\s+)?INDEX\s+IF\s+NOT\s+EXISTS\s+(\w+)",
                         index_sql,
-                        re.IGNORECASE
+                        re.IGNORECASE,
                     )
 
                     if match:
@@ -273,9 +273,7 @@ def get_db() -> sqlite3.Connection:
     """
     if "db" not in g:
         db_path = current_app.config.get("SCRAPER_DB_PATH") or current_app.config["DATABASE_PATH"]
-        g.db = sqlite3.connect(
-            db_path, detect_types=sqlite3.PARSE_DECLTYPES
-        )
+        g.db = sqlite3.connect(db_path, detect_types=sqlite3.PARSE_DECLTYPES)
         g.db.row_factory = sqlite3.Row
     return g.db
 

@@ -19,7 +19,7 @@ class TestApiRoutes:
         mock_session_service.return_value.get_config_status.return_value = {
             "success": True,
             "encryption_enabled": True,
-            "downloads_dir": "/test/downloads"
+            "downloads_dir": "/test/downloads",
         }
 
         response = client.get("/api/config/status")
@@ -35,7 +35,7 @@ class TestApiRoutes:
         """Test config status when service returns error."""
         mock_session_service.return_value.get_config_status.return_value = {
             "success": False,
-            "error": "Configuration error"
+            "error": "Configuration error",
         }
 
         response = client.get("/api/config/status")

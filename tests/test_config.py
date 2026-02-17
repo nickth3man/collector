@@ -99,9 +99,11 @@ class TestDefaultDiskWarningValue:
             # Re-import to pick up default
             from importlib import reload
             import collector.config.settings
+
             reload(collector.config.settings)
 
             from collector.config.settings import Config as ConfigReloaded
+
             assert ConfigReloaded.SCRAPER_DISK_WARN_MB == ConfigReloaded.DEFAULT_DISK_WARNING_MB
         finally:
             # Restore original value
@@ -114,10 +116,14 @@ class TestValidationIntegration:
 
     def test_validation_with_all_constants_at_boundaries(self) -> None:
         """Test validation with all settings at their constant boundaries."""
-        with mock.patch.object(Config, "SCRAPER_MAX_CONCURRENT", Config.MIN_CONCURRENT_JOBS), \
-             mock.patch.object(Config, "SCRAPER_DISK_WARN_MB", Config.MIN_DISK_WARNING_MB):
+        with (
+            mock.patch.object(Config, "SCRAPER_MAX_CONCURRENT", Config.MIN_CONCURRENT_JOBS),
+            mock.patch.object(Config, "SCRAPER_DISK_WARN_MB", Config.MIN_DISK_WARNING_MB),
+        ):
             errors = Config.validate()
-            assert not any("SCRAPER_MAX_CONCURRENT" in e or "SCRAPER_DISK_WARN_MB" in e for e in errors)
+            assert not any(
+                "SCRAPER_MAX_CONCURRENT" in e or "SCRAPER_DISK_WARN_MB" in e for e in errors
+            )
 
     def test_constants_maintain_logical_consistency(self) -> None:
         """Test that constants maintain logical relationships."""
