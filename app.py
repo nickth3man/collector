@@ -6,18 +6,17 @@ Instagram and YouTube with real-time progress tracking via HTMX.
 
 from __future__ import annotations
 
-import json
 import logging
-import os
 import re
 import signal
 import sqlite3
 import threading
 import uuid
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Callable, Generator
+from typing import Any
 
 from flask import (
     Flask,
@@ -26,24 +25,10 @@ from flask import (
     redirect,
     render_template,
     request,
-    send_file,
     url_for,
 )
 
-from security.csrf import csrf_protected, validate_csrf_request
-from security.paths import resolve_user_path, safe_send_file, PathSecurityError
-
-# Session management
-from session_manager import SessionManager
-
 from config import (
-    Config,
-    ALL_STATUSES,
-    FILE_TYPE_AUDIO,
-    FILE_TYPE_IMAGE,
-    FILE_TYPE_METADATA,
-    FILE_TYPE_TRANSCRIPT,
-    FILE_TYPE_VIDEO,
     INSTAGRAM_PATTERNS,
     STATUS_CANCELLED,
     STATUS_COMPLETED,
@@ -51,8 +36,14 @@ from config import (
     STATUS_PENDING,
     STATUS_RUNNING,
     YOUTUBE_PATTERNS,
+    Config,
 )
 from scrapers import InstagramScraper, YouTubeScraper
+from security.csrf import validate_csrf_request
+from security.paths import PathSecurityError, resolve_user_path, safe_send_file
+
+# Session management
+from services.session_manager import SessionManager
 
 # Configure logging
 logging.basicConfig(
@@ -102,8 +93,7 @@ _shutdown_event = threading.Event()
 def init_db() -> None:
     """Initialize the SQLite database with required tables."""
     with get_db() as conn:
-        conn.execute(
-            """
+        conn.execute("""
             CREATE TABLE IF NOT EXISTS jobs (
                 id TEXT PRIMARY KEY,
                 url TEXT NOT NULL,
@@ -119,11 +109,9 @@ def init_db() -> None:
                 updated_at TIMESTAMP NOT NULL DEFAULT (datetime('now')),
                 completed_at TIMESTAMP
             )
-        """
-        )
+        """)
 
-        conn.execute(
-            """
+        conn.execute("""
             CREATE TABLE IF NOT EXISTS files (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 job_id TEXT NOT NULL,
@@ -134,18 +122,15 @@ def init_db() -> None:
                 created_at TIMESTAMP NOT NULL DEFAULT (datetime('now')),
                 FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE
             )
-        """
-        )
+        """)
 
-        conn.execute(
-            """
+        conn.execute("""
             CREATE TABLE IF NOT EXISTS settings (
                 key TEXT PRIMARY KEY,
                 value TEXT NOT NULL,
                 updated_at TIMESTAMP NOT NULL DEFAULT (datetime('now'))
             )
-        """
-        )
+        """)
 
         conn.commit()
 
@@ -611,7 +596,7 @@ def preview_file(filepath: str):
     content = None
     if file_type in ["transcript", "text", "metadata"]:
         try:
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, encoding="utf-8") as f:
                 content = f.read()
         except Exception as e:
             logger.error("Error reading file %s: %s", file_path, e)

@@ -8,8 +8,9 @@ import os
 import re
 import sqlite3
 import unicodedata
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 
 class BaseScraper(abc.ABC):
@@ -26,7 +27,8 @@ class BaseScraper(abc.ABC):
         Args:
             db_path: Path to SQLite database
             download_dir: Root directory for downloads
-            progress_callback: Optional callback for progress updates (progress_percent, operation_text)
+            progress_callback: Optional callback for progress updates
+                (progress_percent, operation_text)
         """
         self.db_path = db_path
         self.download_dir = download_dir
@@ -176,7 +178,8 @@ class BaseScraper(abc.ABC):
             cursor = conn.cursor()
             cursor.execute(
                 """
-                INSERT INTO files (job_id, file_path, file_type, file_size, metadata_json, created_at)
+                INSERT INTO files
+                    (job_id, file_path, file_type, file_size, metadata_json, created_at)
                 VALUES (?, ?, ?, ?, ?, datetime('now'))
                 """,
                 (

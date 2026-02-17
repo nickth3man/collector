@@ -1,12 +1,11 @@
 """
 Configuration module for the Python Content Scraper.
 
-This module provides backward compatibility by importing from the new config package.
-All existing code that imports from this module will continue to work.
+This package provides centralized configuration management with environment variable support.
 """
 
-# Import all the configuration classes and constants from the new config package
-from config.settings import (
+from .database import DatabaseConfig
+from .settings import (
     ALL_STATUSES,
     FILE_TYPE_AUDIO,
     FILE_TYPE_IMAGE,
@@ -25,9 +24,10 @@ from config.settings import (
     get_config,
 )
 
-# Re-export everything for backward compatibility
 __all__ = [
     "Config",
+    "get_config",
+    "DatabaseConfig",
     "INSTAGRAM_PATTERNS",
     "YOUTUBE_PATTERNS",
     "STATUS_PENDING",
@@ -42,5 +42,4 @@ __all__ = [
     "FILE_TYPE_METADATA",
     "FILE_TYPE_TRANSCRIPT",
     "FILE_TYPES",
-    "get_config",
 ]

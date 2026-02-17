@@ -10,8 +10,8 @@ from typing import Any
 import yt_dlp
 from youtube_transcript_api import YouTubeTranscriptApi
 
-from scrapers.base_scraper import BaseScraper
 from config import FILE_TYPE_AUDIO, FILE_TYPE_METADATA, FILE_TYPE_TRANSCRIPT, FILE_TYPE_VIDEO
+from scrapers.base_scraper import BaseScraper
 
 logger = logging.getLogger(__name__)
 

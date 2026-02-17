@@ -1,6 +1,7 @@
 """Tests for Instagram scraper."""
 
 import pytest
+
 from scrapers.instagram_scraper import InstagramScraper
 
 

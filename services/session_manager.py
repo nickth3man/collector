@@ -82,7 +82,7 @@ class SessionManager:
         """
         cookies = []
 
-        with open(cookies_file, "r", encoding="utf-8") as f:
+        with open(cookies_file, encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if not line or line.startswith("#"):

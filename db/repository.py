@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 ALLOWED_JOB_UPDATE_FIELDS = frozenset(
     {
         "status",

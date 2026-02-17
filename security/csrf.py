@@ -24,7 +24,7 @@ def generate_csrf_token() -> str:
     return secrets.token_urlsafe(CSRF_TOKEN_LENGTH)
 
 
-def get_csrf_token_from_session(request: "Request") -> str | None:
+def get_csrf_token_from_session(request: Request) -> str | None:
     """Get CSRF token from session.
 
     Args:
@@ -36,7 +36,7 @@ def get_csrf_token_from_session(request: "Request") -> str | None:
     return request.session.get(CSRF_SESSION_KEY) if hasattr(request, "session") else None
 
 
-def set_csrf_token_in_session(request: "Request") -> str:
+def set_csrf_token_in_session(request: Request) -> str:
     """Generate and store a new CSRF token in session.
 
     Args:
@@ -51,7 +51,7 @@ def set_csrf_token_in_session(request: "Request") -> str:
     return token
 
 
-def get_or_create_csrf_token(request: "Request") -> str:
+def get_or_create_csrf_token(request: Request) -> str:
     """Get existing CSRF token from session or create a new one.
 
     Args:
@@ -66,7 +66,7 @@ def get_or_create_csrf_token(request: "Request") -> str:
     return token
 
 
-def extract_csrf_token(request: "Request") -> str | None:
+def extract_csrf_token(request: Request) -> str | None:
     """Extract CSRF token from request (form field or header).
 
     Checks both form data and headers for the token.
@@ -91,7 +91,7 @@ def extract_csrf_token(request: "Request") -> str | None:
     return None
 
 
-def validate_csrf_token(request: "Request", token: str | None = None) -> bool:
+def validate_csrf_token(request: Request, token: str | None = None) -> bool:
     """Validate CSRF token against session token.
 
     Args:
@@ -114,7 +114,7 @@ def validate_csrf_token(request: "Request", token: str | None = None) -> bool:
     return hmac.compare_digest(token, session_token)
 
 
-def validate_csrf_request(request: "Request") -> bool:
+def validate_csrf_request(request: Request) -> bool:
     """Validate CSRF token for a state-changing request.
 
     Automatically extracts token from form field or header.
@@ -144,7 +144,7 @@ def csrf_protected(func):
 
     @wraps(func)
     def wrapper(*args, **kwargs):
-        from flask import request, abort
+        from flask import abort, request
 
         if not validate_csrf_request(request):
             abort(400, "CSRF token validation failed")

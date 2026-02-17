@@ -12,8 +12,8 @@ from typing import Any
 
 import instaloader
 
-from scrapers.base_scraper import BaseScraper
 from config import FILE_TYPE_IMAGE, FILE_TYPE_METADATA, FILE_TYPE_VIDEO
+from scrapers.base_scraper import BaseScraper
 
 logger = logging.getLogger(__name__)
 
@@ -130,9 +130,10 @@ class InstagramScraper(BaseScraper):
 
                 key_str = os.environ.get("SCRAPER_SESSION_KEY")
                 if key_str:
+                    import base64
+
                     from cryptography.hazmat.primitives import hashes
                     from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-                    import base64
 
                     # Derive proper Fernet key
                     key_bytes = key_str.encode()
@@ -429,7 +430,7 @@ class InstagramScraper(BaseScraper):
                     filepath = output_dir / filename
 
                     # Download file
-                    L.context.download_pic(
+                    loader.context.download_pic(
                         filename=str(filepath), url=url, mtime=post.date_local.timestamp()
                     )
 

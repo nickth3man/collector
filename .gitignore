@@ -21,7 +21,7 @@ htmlcov/
 *.key
 
 # App data
-scraper.db
+instance/
 downloads/
 
 # Editor/OS

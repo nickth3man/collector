@@ -1,6 +1,7 @@
 """Tests for YouTube scraper."""
 
 import pytest
+
 from scrapers.youtube_scraper import YouTubeScraper
 
 
