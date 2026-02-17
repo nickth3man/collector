@@ -1,7 +1,8 @@
 # PROJECT KNOWLEDGE BASE
 
-**Generated:** 2026-02-17  
-**Project:** Content Collector  
+**Generated:** 2026-02-17
+**Last Updated:** 2026-02-17
+**Project:** Content Collector
 **Stack:** Flask 3.x, Python 3.10+, HTMX, SQLite
 
 ---
@@ -11,6 +12,10 @@
 Flask web application for downloading media from Instagram and YouTube with
 real-time progress tracking via HTMX polling. Uses repository/service pattern
 with background threading for downloads.
+
+**CI/CD:** GitHub Actions with Lint, Validate Config, and Test workflows
+**Coverage:** 53.5% (179 tests passing)
+**Package Manager:** uv (fast Python package manager)
 
 ---
 
@@ -109,12 +114,57 @@ from .local_modules import X  # Relative imports within package
 - Store files outside `SCRAPER_DOWNLOAD_DIR`
 - Access database directly from routes (use repositories)
 - Block main thread (use `ExecutorAdapter` for background work)
+- Set environment variables after importing Config class (class attributes are evaluated at import time)
 
 ### AVOID
 
 - Increasing `SCRAPER_MAX_CONCURRENT` above 2 (IG rate limits)
 - Using personal Instagram accounts (use throwaway + cookies)
 - Modifying `JOB_UPDATE_ALLOWED_FIELDS` without security review
+- Using Windows-style backslash paths in tests without platform detection (use `os.name` checks)
+
+---
+
+## TESTING
+
+### Test Structure
+
+```
+tests/
+├── integration/           # Integration tests (database indexes, etc.)
+├── test_*.py             # Unit tests by module
+└── conftest.py           # Shared pytest fixtures
+```
+
+### Key Fixtures
+
+- `client`: Flask test client with app context
+- `tmp_download_dir`: Temporary downloads directory for file tests
+- `app`: Flask application instance
+
+### Security Tests
+
+Path traversal tests are platform-specific:
+- **Windows:** Uses backslash paths (`..\\..\\..\\windows\\system32`)
+- **Linux:** Uses forward slash paths (`../../../etc/shadow`)
+
+Always use `os.name` checks for platform-specific security test paths.
+
+### Running Tests
+
+```bash
+# Run all tests
+uv run pytest
+
+# Run with coverage
+uv run pytest --cov=src --cov-report=term-missing
+
+# Run specific test file
+uv run pytest tests/test_pages_routes.py -xvs
+
+# Run specific test
+uv run pytest tests/test_pages_routes.py::TestPagesRoutes::test_browse_path_traversal_attack -xvs
+```
 
 ---
 
@@ -148,9 +198,36 @@ uv run gunicorn -w 1 -t 120 wsgi:app
 
 ## NOTES
 
+### Configuration
+
+- **Config class attributes** are evaluated at import time, not instantiation time
+- To test with custom config values, set environment variables BEFORE importing:
+  ```python
+  import os
+  os.environ['FLASK_SECRET_KEY'] = 'test'
+  from src.collector.config.settings import Config
+  ```
+- In CI/workflows, use `export` to set environment variables before Python commands
+
+### Deployment
+
 - **Gunicorn workers:** Use `-w 1` only (SQLite write contention)
 - **Static assets:** CDN-first with `static/vendor/` fallback
 - **Instagram auth:** Cookie-based via `instagram_cookies.txt` (not passwords)
 - **Session encryption:** Fernet key required for cookie storage
 - **Graceful shutdown:** Signal handlers wait for active downloads
 - **File serving:** Always use `safe_send_file()` (path traversal protection)
+
+### GitHub Actions
+
+- **Lint:** Ruff formatting and linting checks
+- **Validate Config:** Tests Config class instantiation, validation rules, and environment variable loading
+- **Tests:** Full pytest suite with coverage reporting (currently 53.5%)
+- All workflows use `uv` package manager (no pip cache)
+
+### Platform Compatibility
+
+- Path separators differ between Windows (`\`) and Linux (`/`)
+- Security tests must account for platform differences using `os.name`
+- Flask test client behavior may differ between platforms (e.g., absolute path handling)
+- Always test security fixes on both platforms when possible
