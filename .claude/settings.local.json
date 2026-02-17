@@ -4,7 +4,10 @@
       "Bash(gh pr view:*)",
       "Bash(gh api:*)",
       "Bash(git rm:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(gh pr create:*)"
     ]
   },
   "enabledPlugins": {
