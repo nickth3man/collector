@@ -13,22 +13,22 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from config.settings import (
+from ..config.settings import (
     INSTAGRAM_PATTERNS,
     STATUS_COMPLETED,
     STATUS_FAILED,
     STATUS_RUNNING,
     YOUTUBE_PATTERNS,
 )
-from repositories.file_repository import FileRepository
-from repositories.job_repository import JobRepository
-from services.session_manager import SessionManager
+from ..repositories.file_repository import FileRepository
+from ..repositories.job_repository import JobRepository
+from .session_manager import SessionManager
 
 # Import scrapers conditionally to avoid import errors in test environment
 
 try:
-    from scrapers import InstagramScraper as InstagramScraperClass
-    from scrapers import YouTubeScraper as YouTubeScraperClass
+    from ..scrapers import InstagramScraper as InstagramScraperClass
+    from ..scrapers import YouTubeScraper as YouTubeScraperClass
 
     SCRAPERS_AVAILABLE = True
 except ImportError:

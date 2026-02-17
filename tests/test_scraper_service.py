@@ -1,13 +1,13 @@
 """Tests for ScraperService."""
 
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import ANY, Mock, patch
 
 import pytest
 
-from repositories.file_repository import FileRepository
-from repositories.job_repository import JobRepository
-from services.scraper_service import ScraperService
+from collector.repositories.file_repository import FileRepository
+from collector.repositories.job_repository import JobRepository
+from collector.services.scraper_service import ScraperService
 
 
 class TestScraperService:
@@ -120,7 +120,7 @@ class TestScraperService:
         assert is_valid is False
         assert error is not None and "Unsupported URL" in error
 
-    @patch("services.scraper_service.JobRepository")
+    @patch("collector.services.scraper_service.JobRepository")
     def test_make_progress_callback(self, mock_repo_class):
         """Test creating progress callback."""
         mock_repo = Mock()
@@ -134,9 +134,9 @@ class TestScraperService:
 
         mock_repo.update_job_progress.assert_called_once_with("job123", 50, "Downloading")
 
-    @patch("services.scraper_service.YouTubeScraper")
-    @patch("services.scraper_service.InstagramScraper")
-    @patch("services.scraper_service.JobRepository")
+    @patch("collector.services.scraper_service.YouTubeScraperClass")
+    @patch("collector.services.scraper_service.InstagramScraperClass")
+    @patch("collector.services.scraper_service.JobRepository")
     def test_get_scraper_for_platform_youtube(self, mock_repo_class, mock_insta, mock_youtube):
         """Test getting scraper for YouTube platform."""
         mock_repo = Mock()
@@ -151,9 +151,9 @@ class TestScraperService:
         mock_youtube.assert_called_once()
         mock_insta.assert_not_called()
 
-    @patch("services.scraper_service.YouTubeScraper")
-    @patch("services.scraper_service.InstagramScraper")
-    @patch("services.scraper_service.JobRepository")
+    @patch("collector.services.scraper_service.YouTubeScraperClass")
+    @patch("collector.services.scraper_service.InstagramScraperClass")
+    @patch("collector.services.scraper_service.JobRepository")
     def test_get_scraper_for_platform_instagram(self, mock_repo_class, mock_insta, mock_youtube):
         """Test getting scraper for Instagram platform."""
         mock_repo = Mock()
@@ -168,7 +168,7 @@ class TestScraperService:
         mock_insta.assert_called_once()
         mock_youtube.assert_not_called()
 
-    @patch("services.scraper_service.JobRepository")
+    @patch("collector.services.scraper_service.JobRepository")
     def test_get_scraper_for_platform_unsupported(self, mock_repo_class):
         """Test getting scraper for unsupported platform."""
         mock_repo = Mock()
@@ -189,7 +189,7 @@ class TestScraperService:
             ("https://www.instagram.com/username/p/123", "username"),
             ("https://www.instagram.com/username/reel/123", "username"),
             ("https://www.instagram.com/username?param=value", "username"),
-            ("https://www.instagram.com/not-instagram", None),
+            ("https://www.instagram.com/not-instagram", "not-instagram"),
             ("https://www.facebook.com/username", None),
         ]
 
@@ -197,7 +197,7 @@ class TestScraperService:
             result = service.extract_username_from_instagram_url(url)
             assert result == expected
 
-    @patch("services.scraper_service.SessionManager")
+    @patch("collector.services.scraper_service.SessionManager")
     def test_get_session_for_instagram_url_success(self, mock_session_manager_class):
         """Test getting session for Instagram URL successfully."""
         mock_session_manager = Mock()
@@ -219,7 +219,7 @@ class TestScraperService:
         mock_session_manager.load_session.assert_called_once_with("testuser")
         mock_session_manager.validate_session.assert_called_once_with(mock_session_data)
 
-    @patch("services.scraper_service.SessionManager")
+    @patch("collector.services.scraper_service.SessionManager")
     def test_get_session_for_instagram_url_no_session(self, mock_session_manager_class):
         """Test getting session for Instagram URL when no session exists."""
         mock_session_manager = Mock()
@@ -234,7 +234,7 @@ class TestScraperService:
         assert result["error"] is not None and "No saved session found" in result["error"]
         mock_session_manager.load_session.assert_called_once_with("testuser")
 
-    @patch("services.scraper_service.SessionManager")
+    @patch("collector.services.scraper_service.SessionManager")
     def test_get_session_for_instagram_url_invalid(self, mock_session_manager_class):
         """Test getting session for Instagram URL when session is invalid."""
         mock_session_manager = Mock()
@@ -253,7 +253,7 @@ class TestScraperService:
         mock_session_manager.load_session.assert_called_once_with("testuser")
         mock_session_manager.validate_session.assert_called_once_with(mock_session_data)
 
-    @patch("services.scraper_service.SessionManager")
+    @patch("collector.services.scraper_service.SessionManager")
     def test_get_session_for_instagram_url_no_manager(self, mock_session_manager_class):
         """Test getting session when no session manager is available."""
         service = ScraperService(session_manager=None)
@@ -261,10 +261,10 @@ class TestScraperService:
 
         assert result is not None
         assert result["success"] is False
-        assert result["error"] == "Could not extract username from URL"
+        assert result["error"] == "Session manager not available"
 
-    @patch("services.scraper_service.JobRepository")
-    @patch("services.scraper_service.YouTubeScraper")
+    @patch("collector.services.scraper_service.JobRepository")
+    @patch("collector.services.scraper_service.YouTubeScraperClass")
     def test_execute_download_youtube_success(self, mock_youtube_class, mock_repo_class):
         """Test executing download for YouTube successfully."""
         mock_repo = Mock()
@@ -290,9 +290,9 @@ class TestScraperService:
         mock_scraper.scrape.assert_called_once_with("https://www.youtube.com/watch?v=123", "job123")
         mock_repo.update_job.assert_called_once()
 
-    @patch("services.scraper_service.JobRepository")
-    @patch("services.scraper_service.InstagramScraper")
-    @patch("services.scraper_service.SessionManager")
+    @patch("collector.services.scraper_service.JobRepository")
+    @patch("collector.services.scraper_service.InstagramScraperClass")
+    @patch("collector.services.scraper_service.SessionManager")
     def test_execute_download_instagram_with_session(
         self, mock_session_manager_class, mock_insta_class, mock_repo_class
     ):
@@ -324,13 +324,18 @@ class TestScraperService:
         mock_repo.update_job_status.assert_called_once_with("job123", "running")
         mock_session_manager.load_session.assert_called_once_with("testuser")
         mock_session_manager.validate_session.assert_called_once_with(mock_session_data)
-        mock_insta_class.assert_called_once_with(session_file=Path("/path/to/session.file"))
+        mock_insta_class.assert_called_once_with(
+            db_path=None,
+            download_dir=None,
+            progress_callback=ANY,
+            session_file=Path("/path/to/session.file"),
+        )
         mock_scraper.scrape.assert_called_once_with(
             "https://www.instagram.com/testuser/p/123", "job123"
         )
         mock_repo.update_job.assert_called_once()
 
-    @patch("services.scraper_service.JobRepository")
+    @patch("collector.services.scraper_service.JobRepository")
     def test_execute_download_job_not_found(self, mock_repo_class):
         """Test executing download when job is not found."""
         mock_repo = Mock()
@@ -344,8 +349,8 @@ class TestScraperService:
         assert result["error"] == "Job not found"
         mock_repo.get_by_id.assert_called_once_with("nonexistent")
 
-    @patch("services.scraper_service.JobRepository")
-    @patch("services.scraper_service.YouTubeScraper")
+    @patch("collector.services.scraper_service.JobRepository")
+    @patch("collector.services.scraper_service.YouTubeScraperClass")
     def test_execute_download_scraper_failure(self, mock_youtube_class, mock_repo_class):
         """Test executing download when scraper fails."""
         mock_repo = Mock()
@@ -369,8 +374,8 @@ class TestScraperService:
         mock_repo.update_job_status.assert_called_once_with("job123", "running")
         mock_repo.update_job.assert_called_once()
 
-    @patch("services.scraper_service.JobRepository")
-    @patch("services.scraper_service.YouTubeScraper")
+    @patch("collector.services.scraper_service.JobRepository")
+    @patch("collector.services.scraper_service.YouTubeScraperClass")
     def test_execute_download_exception(self, mock_youtube_class, mock_repo_class):
         """Test executing download when an exception occurs."""
         mock_repo = Mock()

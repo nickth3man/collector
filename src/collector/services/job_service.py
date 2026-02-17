@@ -11,15 +11,15 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from config.settings import (
+from ..config.settings import (
     STATUS_CANCELLED,
     STATUS_FAILED,
     STATUS_PENDING,
     STATUS_RUNNING,
 )
-from models.job import Job
-from repositories.file_repository import FileRepository
-from repositories.job_repository import JobRepository
+from ..models.job import Job
+from ..repositories.file_repository import FileRepository
+from ..repositories.job_repository import JobRepository
 
 logger = logging.getLogger(__name__)
 

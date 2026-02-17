@@ -2,9 +2,9 @@
 
 from unittest.mock import Mock, patch
 
-from repositories.settings_repository import SettingsRepository
-from services.session_manager import SessionManager
-from services.session_service import SessionService
+from collector.repositories.settings_repository import SettingsRepository
+from collector.services.session_manager import SessionManager
+from collector.services.session_service import SessionService
 
 
 class TestSessionService:
@@ -27,7 +27,7 @@ class TestSessionService:
         assert service.session_manager is None
         assert service.settings_repository is not None
 
-    @patch("services.session_service.SessionManager")
+    @patch("collector.services.session_service.SessionManager")
     def test_upload_session_success(self, mock_manager_class):
         """Test successful session upload."""
         mock_manager = Mock()
@@ -44,10 +44,10 @@ class TestSessionService:
 
         assert result["success"] is True
         assert result["username"] == "12345"
-        assert result["session_file"] == mock_session_file
+        assert result["session_file"] == str(mock_session_file)
         assert "uploaded successfully" in result["message"]
 
-    @patch("services.session_service.SessionManager")
+    @patch("collector.services.session_service.SessionManager")
     def test_upload_session_invalid_format(self, mock_manager_class):
         """Test session upload with invalid file format."""
         mock_manager = Mock()
@@ -59,7 +59,7 @@ class TestSessionService:
         assert result["success"] is False
         assert ".txt format" in result["error"]
 
-    @patch("services.session_service.SessionManager")
+    @patch("collector.services.session_service.SessionManager")
     def test_upload_session_no_manager(self, mock_manager_class):
         """Test session upload when no session manager is available."""
         service = SessionService(session_manager=None)
@@ -68,7 +68,7 @@ class TestSessionService:
         assert result["success"] is False
         assert "Session manager not available" in result["error"]
 
-    @patch("services.session_service.SessionManager")
+    @patch("collector.services.session_service.SessionManager")
     def test_upload_session_value_error(self, mock_manager_class):
         """Test session upload when cookies file is invalid."""
         mock_manager = Mock()
@@ -81,7 +81,7 @@ class TestSessionService:
         assert result["success"] is False
         assert result["error"] == "Invalid cookies"
 
-    @patch("services.session_service.SessionManager")
+    @patch("collector.services.session_service.SessionManager")
     def test_load_session_success(self, mock_manager_class):
         """Test successful session load."""
         mock_manager = Mock()
@@ -97,7 +97,7 @@ class TestSessionService:
         assert result["session_data"] == mock_session_data
         assert result["username"] == "testuser"
 
-    @patch("services.session_service.SessionManager")
+    @patch("collector.services.session_service.SessionManager")
     def test_load_session_not_found(self, mock_manager_class):
         """Test loading a session that doesn't exist."""
         mock_manager = Mock()
@@ -110,7 +110,7 @@ class TestSessionService:
         assert result["success"] is False
         assert "No saved session found" in result["error"]
 
-    @patch("services.session_service.SessionManager")
+    @patch("collector.services.session_service.SessionManager")
     def test_load_session_no_manager(self, mock_manager_class):
         """Test loading a session when no session manager is available."""
         service = SessionService(session_manager=None)
@@ -119,7 +119,7 @@ class TestSessionService:
         assert result["success"] is False
         assert "Session manager not available" in result["error"]
 
-    @patch("services.session_service.SessionManager")
+    @patch("collector.services.session_service.SessionManager")
     def test_validate_session_success(self, mock_manager_class):
         """Test successful session validation."""
         mock_manager = Mock()
@@ -133,7 +133,7 @@ class TestSessionService:
         assert result["is_valid"] is True
         assert "Session is valid" in result["message"]
 
-    @patch("services.session_service.SessionManager")
+    @patch("collector.services.session_service.SessionManager")
     def test_validate_session_invalid(self, mock_manager_class):
         """Test validating an invalid session."""
         mock_manager = Mock()
@@ -147,7 +147,7 @@ class TestSessionService:
         assert result["is_valid"] is False
         assert "Session has expired" in result["message"]
 
-    @patch("services.session_service.SessionManager")
+    @patch("collector.services.session_service.SessionManager")
     def test_validate_session_no_manager(self, mock_manager_class):
         """Test validating a session when no session manager is available."""
         service = SessionService(session_manager=None)
@@ -156,7 +156,7 @@ class TestSessionService:
         assert result["success"] is False
         assert "Session manager not available" in result["error"]
 
-    @patch("services.session_service.SessionManager")
+    @patch("collector.services.session_service.SessionManager")
     def test_list_sessions_success(self, mock_manager_class):
         """Test successful session listing."""
         mock_manager = Mock()
@@ -175,7 +175,7 @@ class TestSessionService:
         assert result["sessions"] == mock_sessions
         assert result["count"] == 2
 
-    @patch("services.session_service.SessionManager")
+    @patch("collector.services.session_service.SessionManager")
     def test_list_sessions_no_manager(self, mock_manager_class):
         """Test listing sessions when no session manager is available."""
         service = SessionService(session_manager=None)
@@ -184,7 +184,7 @@ class TestSessionService:
         assert result["success"] is False
         assert "Session manager not available" in result["error"]
 
-    @patch("services.session_service.SessionManager")
+    @patch("collector.services.session_service.SessionManager")
     def test_delete_session_success(self, mock_manager_class):
         """Test successful session deletion."""
         mock_manager = Mock()
@@ -198,7 +198,7 @@ class TestSessionService:
         assert "testuser" in result["message"]
         assert "deleted successfully" in result["message"]
 
-    @patch("services.session_service.SessionManager")
+    @patch("collector.services.session_service.SessionManager")
     def test_delete_session_not_found(self, mock_manager_class):
         """Test deleting a session that doesn't exist."""
         mock_manager = Mock()
@@ -211,7 +211,7 @@ class TestSessionService:
         assert result["success"] is False
         assert "Session not found" in result["error"]
 
-    @patch("services.session_service.SessionManager")
+    @patch("collector.services.session_service.SessionManager")
     def test_delete_session_no_manager(self, mock_manager_class):
         """Test deleting a session when no session manager is available."""
         service = SessionService(session_manager=None)
@@ -220,8 +220,8 @@ class TestSessionService:
         assert result["success"] is False
         assert "Session manager not available" in result["error"]
 
-    @patch("services.session_service.SettingsRepository")
-    @patch("services.session_service.SessionManager")
+    @patch("collector.services.session_service.SettingsRepository")
+    @patch("collector.services.session_service.SessionManager")
     def test_get_config_status_with_encryption(self, mock_manager_class, mock_settings_class):
         """Test getting configuration status with encryption enabled."""
         mock_manager = Mock()
@@ -230,6 +230,8 @@ class TestSessionService:
 
         mock_settings = Mock()
         mock_settings_class.return_value = mock_settings
+        mock_settings.get_by_key.return_value = None
+        mock_settings.get_by_key.return_value = None
 
         mock_setting = Mock()
         mock_setting.value = "/tmp/downloads"
@@ -242,8 +244,8 @@ class TestSessionService:
         assert result["encryption_enabled"] is True
         assert result["downloads_dir"] == "/tmp/downloads"
 
-    @patch("services.session_service.SettingsRepository")
-    @patch("services.session_service.SessionManager")
+    @patch("collector.services.session_service.SettingsRepository")
+    @patch("collector.services.session_service.SessionManager")
     def test_get_config_status_no_encryption(self, mock_manager_class, mock_settings_class):
         """Test getting configuration status with encryption disabled."""
         mock_manager = Mock()
@@ -252,6 +254,7 @@ class TestSessionService:
 
         mock_settings = Mock()
         mock_settings_class.return_value = mock_settings
+        mock_settings.get_by_key.return_value = None
 
         service = SessionService(session_manager=mock_manager, settings_repository=mock_settings)
         result = service.get_config_status()
@@ -260,7 +263,7 @@ class TestSessionService:
         assert result["encryption_enabled"] is False
         assert result["downloads_dir"] is None
 
-    @patch("services.session_service.SessionManager")
+    @patch("collector.services.session_service.SessionManager")
     def test_extract_username_from_cookies(self, mock_manager_class):
         """Test extracting username from cookies data."""
         service = SessionService()
@@ -287,7 +290,7 @@ class TestSessionService:
         result = service.extract_username_from_cookies(cookies_data_no_user)
         assert result is None
 
-    @patch("services.session_service.SessionManager")
+    @patch("collector.services.session_service.SessionManager")
     def test_cookies_to_session_dict(self, mock_manager_class):
         """Test converting cookies to session dictionary."""
         mock_manager = Mock()
@@ -303,7 +306,7 @@ class TestSessionService:
         assert result == expected_dict
         mock_manager.cookies_to_session_dict.assert_called_once_with(cookies_data)
 
-    @patch("services.session_service.SessionManager")
+    @patch("collector.services.session_service.SessionManager")
     def test_cookies_to_session_dict_no_manager(self, mock_manager_class):
         """Test converting cookies when no session manager is available."""
         service = SessionService(session_manager=None)
@@ -311,8 +314,8 @@ class TestSessionService:
 
         assert result == {}
 
-    @patch("services.session_service.SessionService.load_session")
-    @patch("services.session_service.SessionService.validate_session")
+    @patch("collector.services.session_service.SessionService.load_session")
+    @patch("collector.services.session_service.SessionService.validate_session")
     def test_get_session_for_url_success(self, mock_validate, mock_load):
         """Test getting session for URL successfully."""
         mock_session_data = {"username": "testuser", "valid": True}
@@ -327,7 +330,7 @@ class TestSessionService:
         assert result["session_data"] == mock_session_data
         assert result["is_valid"] is True
 
-    @patch("services.session_service.SessionService.load_session")
+    @patch("collector.services.session_service.SessionService.load_session")
     def test_get_session_for_url_no_username(self, mock_load):
         """Test getting session for URL with no extractable username."""
         service = SessionService()
@@ -337,8 +340,8 @@ class TestSessionService:
         assert "Could not extract username" in result["error"]
         mock_load.assert_not_called()
 
-    @patch("services.session_service.SessionService.load_session")
-    @patch("services.session_service.SessionService.validate_session")
+    @patch("collector.services.session_service.SessionService.load_session")
+    @patch("collector.services.session_service.SessionService.validate_session")
     def test_get_session_for_url_session_expired(self, mock_validate, mock_load):
         """Test getting session for URL when session has expired."""
         mock_session_data = {"username": "testuser", "valid": False}
@@ -351,7 +354,7 @@ class TestSessionService:
         assert result["success"] is False
         assert result["error"] == "Session has expired"
 
-    @patch("services.session_service.SessionService.load_session")
+    @patch("collector.services.session_service.SessionService.load_session")
     def test_get_session_for_url_no_session(self, mock_load):
         """Test getting session for URL when no session exists."""
         mock_load.return_value = {"success": False, "error": "No saved session found"}

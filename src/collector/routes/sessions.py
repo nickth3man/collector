@@ -6,8 +6,8 @@ import logging
 
 from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
 
-from security.csrf import validate_csrf_request
-from services import SessionService
+from ..security.csrf import validate_csrf_request
+from ..services import SessionService
 
 logger = logging.getLogger(__name__)
 
@@ -45,14 +45,15 @@ def upload_session():
         return redirect(url_for("sessions.list_sessions"))
 
     file = request.files["cookies_file"]
+    filename = file.filename or ""
 
-    if file.filename == "":
+    if filename == "":
         if "HX-Request" in request.headers:
             return '<div class="notification error">No file selected</div>', 400
         flash("No file selected", "error")
         return redirect(url_for("sessions.list_sessions"))
 
-    if not file.filename.endswith(".txt"):
+    if not filename.endswith(".txt"):
         if "HX-Request" in request.headers:
             return (
                 '<div class="notification error">File must be .txt format (cookies.txt)</div>',
@@ -68,7 +69,7 @@ def upload_session():
         file_content = file.read().decode("utf-8")
 
         # Process the uploaded file
-        result = session_service.upload_session(file_content, file.filename or "")
+        result = session_service.upload_session(file_content, filename)
 
         if result["success"]:
             if "HX-Request" in request.headers:

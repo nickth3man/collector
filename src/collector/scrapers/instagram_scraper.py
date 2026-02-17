@@ -12,8 +12,8 @@ from typing import Any
 
 import instaloader
 
-from config import FILE_TYPE_IMAGE, FILE_TYPE_METADATA, FILE_TYPE_VIDEO
-from scrapers.base_scraper import BaseScraper
+from ..config import FILE_TYPE_IMAGE, FILE_TYPE_METADATA, FILE_TYPE_VIDEO
+from .base_scraper import BaseScraper
 
 logger = logging.getLogger(__name__)
 

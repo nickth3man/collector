@@ -8,38 +8,38 @@ import threading
 
 from flask import Flask
 
-from config import get_config
-from config.database import close_db
-from routes import api_bp, jobs_bp, pages_bp, sessions_bp
-from security.csrf import get_csrf_token_from_session, get_or_create_csrf_token
+from .config import get_config
+from .config.database import close_db
+from .routes import api_bp, jobs_bp, pages_bp, sessions_bp
+from .security.csrf import get_csrf_token_from_session, get_or_create_csrf_token
 
 logger = logging.getLogger(__name__)
 
-# Shutdown flag for graceful shutdown
 _shutdown_event = threading.Event()
 
 
 def create_app() -> Flask:
     """Create and configure Flask application."""
-    app = Flask(__name__)
+    app = Flask(__name__, instance_relative_config=True)
 
-    # Load configuration
     config_class = get_config()
     app.config.from_object(config_class)
 
-    # Set database path in app config
+    errors = config_class.validate()
+    if errors:
+        logger.warning("Configuration warnings: %s", errors)
+
+    config_class.ensure_directories()
+
     app.config["DATABASE_PATH"] = str(config_class.SCRAPER_DB_PATH)
 
-    # Register teardown functions
     app.teardown_appcontext(close_db)
 
-    # Register blueprints
     app.register_blueprint(pages_bp)
     app.register_blueprint(jobs_bp)
     app.register_blueprint(sessions_bp)
     app.register_blueprint(api_bp)
 
-    # Register before_request handler for CSRF and shutdown checks
     @app.before_request
     def before_request():
         """Check for shutdown and initialize CSRF token."""
@@ -52,7 +52,6 @@ def create_app() -> Flask:
 
         get_or_create_csrf_token(request)
 
-    # Register context processor for CSRF token injection
     @app.context_processor
     def inject_csrf_token():
         """Inject CSRF token into all templates."""
@@ -60,7 +59,6 @@ def create_app() -> Flask:
 
         return {"csrf_token": get_csrf_token_from_session(request) or ""}
 
-    # Register error handlers
     @app.errorhandler(404)
     def not_found(error):
         """Handle 404 errors."""
@@ -79,13 +77,11 @@ def create_app() -> Flask:
             return "Server error", 500
         return render_template("error.html", error="Server error"), 500
 
-    # Initialize database tables using the repositories
-    from repositories.file_repository import FileRepository
-    from repositories.job_repository import JobRepository
-    from repositories.settings_repository import SettingsRepository
+    from .repositories.file_repository import FileRepository
+    from .repositories.job_repository import JobRepository
+    from .repositories.settings_repository import SettingsRepository
 
     with app.app_context():
-        # Initialize repositories which will create tables if needed
         JobRepository()
         FileRepository()
         SettingsRepository()
@@ -100,7 +96,7 @@ def signal_handler(signum, frame):
     _shutdown_event.set()
     logger.info(
         "Waiting for running jobs to complete (timeout: %ds)...",
-        30,  # Default timeout
+        30,
     )
 
 

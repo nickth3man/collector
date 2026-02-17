@@ -6,7 +6,7 @@ All existing code that imports from this module will continue to work.
 """
 
 # Import all the configuration classes and constants from the new config package
-from config.settings import (
+from collector.config.settings import (
     ALL_STATUSES,
     FILE_TYPE_AUDIO,
     FILE_TYPE_IMAGE,

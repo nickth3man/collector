@@ -8,8 +8,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from models.file import File
-from repositories.base import BaseRepository
+from ..models.file import File
+from .base import BaseRepository
 
 
 class FileRepository(BaseRepository[File]):

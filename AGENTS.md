@@ -16,20 +16,22 @@ Flask web application for downloading media from Instagram and YouTube with real
 
 ```
 ./
-├── app.py                 # Flask entry point, legacy monolithic routes
-├── app_factory.py         # Application factory pattern (preferred)
-├── config.py              # Backward-compat config exports
-├── config/                # Configuration package
-├── routes/                # Flask blueprints (API, jobs, pages, sessions)
-├── models/                # Data models (Job, File, Settings)
-├── services/              # Business logic layer
-├── repositories/          # Data access layer
-├── scrapers/              # YouTube + Instagram scrapers
-├── security/              # CSRF, path traversal protection
-├── templates/             # Jinja2 + HTMX templates
-├── static/                # CDN-first assets with local fallback
-├── tests/                 # pytest suite
-└── downloads/             # Downloaded content storage
+├── wsgi.py                 # Thin entry point (imports from collector package)
+├── config.py               # Backward-compat config exports
+├── src/
+│   └── collector/          # Main package
+│       ├── __init__.py     # create_app(), signal handlers
+│       ├── config/         # Configuration package
+│       ├── routes/         # Flask blueprints (API, jobs, pages, sessions)
+│       ├── models/         # Data models (Job, File, Settings)
+│       ├── services/       # Business logic layer
+│       ├── repositories/   # Data access layer
+│       ├── scrapers/       # YouTube + Instagram scrapers
+│       └── security/       # CSRF, path traversal protection
+├── templates/              # Jinja2 + HTMX templates
+├── static/                 # CDN-first assets with local fallback
+├── tests/                  # pytest suite
+└── downloads/              # Downloaded content storage
 ```
 
 ---
@@ -38,13 +40,13 @@ Flask web application for downloading media from Instagram and YouTube with real
 
 | Task | Location | Notes |
 |------|----------|-------|
-| Add new route | `routes/` | Create blueprint, register in `app_factory.py` |
-| Modify download logic | `scrapers/` | Extend `BaseScraper` abstract class |
-| Change database schema | `repositories/` + `models/` | Repository creates tables in `__init__` |
-| Add API endpoint | `routes/api.py` | JSON API routes |
+| Add new route | `src/collector/routes/` | Create blueprint, import in `__init__.py` |
+| Modify download logic | `src/collector/scrapers/` | Extend `BaseScraper` abstract class |
+| Change database schema | `src/collector/repositories/` + `models/` | Repository creates tables in `__init__` |
+| Add API endpoint | `src/collector/routes/api.py` | JSON API routes |
 | Update UI | `templates/` | HTMX fragments in `partials/` |
-| Job management | `services/job_service.py` | Background task coordination |
-| Security utils | `security/` | CSRF tokens, path validation |
+| Job management | `src/collector/services/job_service.py` | Background task coordination |
+| Security utils | `src/collector/security/` | CSRF tokens, path validation |
 
 ---
 
@@ -71,12 +73,12 @@ import stdlib
 
 import third_party
 
-import local_modules
+from .local_modules import X  # Relative imports within package
 ```
 
 ### Flask Patterns
-- **Blueprints:** All routes in `routes/` package
-- **Factory:** Use `app_factory.py` for new code (not legacy `app.py`)
+- **Blueprints:** All routes in `src/collector/routes/` package
+- **Factory:** `create_app()` in `src/collector/__init__.py`
 - **CSRF:** All POST/DELETE routes must call `validate_csrf_request(request)`
 - **HTMX:** Check `"HX-Request" in request.headers` for fragment responses
 
@@ -90,11 +92,11 @@ import local_modules
 ## ANTI-PATTERNS
 
 ### NEVER
-- Use `app.py` for new routes (use blueprints in `routes/` instead)
+- Add routes outside `src/collector/routes/`
 - Skip CSRF validation on state-changing routes
 - Store files outside `SCRAPER_DOWNLOAD_DIR`
 - Access database directly from routes (use repositories)
-- Block main thread (use `submit_task()` for background work)
+- Block main thread (use `ExecutorAdapter` for background work)
 
 ### AVOID
 - Increasing `SCRAPER_MAX_CONCURRENT` above 2 (IG rate limits)
@@ -107,7 +109,7 @@ import local_modules
 
 ```bash
 # Development
-uv run python app.py
+uv run python -m collector
 
 # Tests
 uv run pytest
@@ -118,7 +120,7 @@ uv run black .
 uv run ruff check .
 
 # Production
-uv run gunicorn -w 1 -t 120 app:app
+uv run gunicorn -w 1 -t 120 wsgi:app
 ```
 
 ---

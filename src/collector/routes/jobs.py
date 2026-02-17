@@ -6,8 +6,8 @@ import logging
 
 from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
 
-from security.csrf import validate_csrf_request
-from services import JobService, ScraperService
+from ..security.csrf import validate_csrf_request
+from ..services import ExecutorAdapter, JobService, ScraperService
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +63,6 @@ def download():
 
     url = request.form.get("url", "").strip()
 
-    # Validate URL using ScraperService
     scraper_service = ScraperService()
     is_valid, error = scraper_service.validate_url(url)
 
@@ -73,7 +72,6 @@ def download():
         flash(error or "Unknown validation error", "error")
         return redirect(url_for("pages.index"))
 
-    # Detect platform
     platform = scraper_service.detect_platform(url)
     if not platform:
         if "HX-Request" in request.headers:
@@ -81,15 +79,12 @@ def download():
         flash("Could not detect platform", "error")
         return redirect(url_for("pages.index"))
 
-    # Create job using JobService
     job_service = JobService()
     job = job_service.create_job(url, platform)
 
-    # Submit background job using ScraperService
-    scraper_service.execute_download(job.id)
+    ExecutorAdapter().submit_job(scraper_service.execute_download, job.id)
 
     if "HX-Request" in request.headers:
-        # Return the new job card
         return render_template("partials/job_card.html", job=job, files=[])
 
     flash(f"Download started for {url}", "success")
@@ -130,9 +125,8 @@ def retry_job(job_id: str):
         flash("Only failed jobs can be retried", "error")
         return redirect(url_for("pages.index"))
 
-    # Submit background job using ScraperService
     scraper_service = ScraperService()
-    scraper_service.execute_download(new_job.id)
+    ExecutorAdapter().submit_job(scraper_service.execute_download, new_job.id)
 
     if "HX-Request" in request.headers:
         return render_template("partials/job_card.html", job=new_job, files=[])

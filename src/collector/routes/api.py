@@ -6,7 +6,7 @@ import logging
 
 from flask import Blueprint, current_app, jsonify
 
-from services import SessionService
+from ..services import SessionService
 
 logger = logging.getLogger(__name__)
 

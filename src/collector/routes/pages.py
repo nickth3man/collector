@@ -7,8 +7,8 @@ from pathlib import Path
 
 from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
 
-from security.paths import PathSecurityError, resolve_user_path, safe_send_file
-from services import JobService
+from ..security.paths import PathSecurityError, resolve_user_path, safe_send_file
+from ..services import JobService
 
 logger = logging.getLogger(__name__)
 

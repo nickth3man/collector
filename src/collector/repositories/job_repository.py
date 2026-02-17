@@ -8,8 +8,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from models.job import Job
-from repositories.base import BaseRepository
+from ..models.job import Job
+from .base import BaseRepository
 
 
 class JobRepository(BaseRepository[Job]):
@@ -108,7 +108,7 @@ class JobRepository(BaseRepository[Job]):
         file_results = self.execute_custom_query(sql, (job_id,))
 
         # Import here to avoid circular imports
-        from models.file import File
+        from ..models.file import File
 
         files = [File.from_dict(file_data) for file_data in file_results]
 

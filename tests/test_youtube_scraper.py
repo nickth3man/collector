@@ -2,7 +2,7 @@
 
 import pytest
 
-from scrapers.youtube_scraper import YouTubeScraper
+from collector.scrapers.youtube_scraper import YouTubeScraper
 
 
 class TestYouTubeScraper:
@@ -59,6 +59,7 @@ class TestYouTubeScraper:
 )
 def test_detect_platform(url, expected):
     """Test platform detection from URLs."""
-    from app import detect_platform
+    from collector.services.scraper_service import ScraperService
 
-    assert detect_platform(url) == expected
+    service = ScraperService()
+    assert service.detect_platform(url) == expected

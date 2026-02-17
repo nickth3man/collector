@@ -5,13 +5,13 @@ from __future__ import annotations
 import logging
 import re
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import yt_dlp
 from youtube_transcript_api import YouTubeTranscriptApi
 
-from config import FILE_TYPE_AUDIO, FILE_TYPE_METADATA, FILE_TYPE_TRANSCRIPT, FILE_TYPE_VIDEO
-from scrapers.base_scraper import BaseScraper
+from ..config import FILE_TYPE_AUDIO, FILE_TYPE_METADATA, FILE_TYPE_TRANSCRIPT, FILE_TYPE_VIDEO
+from .base_scraper import BaseScraper
 
 logger = logging.getLogger(__name__)
 
@@ -326,20 +326,20 @@ class YouTubeScraper(BaseScraper):
 
             # Try to get transcript (manually created first, then auto-generated)
             try:
-                transcript_list = api.fetch(video_id, languages=["en"])
-                transcript = transcript_list
+                transcript = cast(Any, api).fetch(video_id, languages=["en"])
             except Exception:
                 # Fallback to auto-generated
                 try:
-                    transcript_list = api.fetch(video_id, languages=["en"], languages_auto=True)
-                    transcript = transcript_list
+                    transcript = cast(Any, api).fetch(
+                        video_id, languages=["en"], languages_auto=True
+                    )
                 except Exception:
                     # No transcript available
                     logger.info("No transcript available for video %s", video_id)
                     return None
 
             # Format as plain text
-            transcript_text = self._format_transcript(transcript)
+            transcript_text = self._format_transcript(cast(list[dict[str, Any]], transcript))
 
             # Save to file
             transcript_path = output_dir / "transcript.txt"

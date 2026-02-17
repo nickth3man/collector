@@ -8,8 +8,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from models.settings import Settings
-from repositories.base import BaseRepository
+from ..models.settings import Settings
+from .base import BaseRepository
 
 
 class SettingsRepository(BaseRepository[Settings]):

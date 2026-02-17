@@ -12,8 +12,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from repositories.settings_repository import SettingsRepository
-from services.session_manager import SessionManager
+from ..repositories.settings_repository import SettingsRepository
+from .session_manager import SessionManager
 
 logger = logging.getLogger(__name__)
 

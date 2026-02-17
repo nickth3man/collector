@@ -9,8 +9,8 @@ from __future__ import annotations
 
 from typing import Any, Generic, TypeVar
 
-from config.database import DatabaseConfig, get_db_config
-from models.base import BaseModel
+from ..config.database import DatabaseConfig, get_db_config
+from ..models.base import BaseModel
 
 T = TypeVar("T", bound=BaseModel)
 

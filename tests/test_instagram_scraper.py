@@ -2,7 +2,7 @@
 
 import pytest
 
-from scrapers.instagram_scraper import InstagramScraper
+from collector.scrapers.instagram_scraper import InstagramScraper
 
 
 class TestInstagramScraper:

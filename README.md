@@ -116,11 +116,31 @@ Instagram scraping works best with authenticated sessions. Instead of passwords,
 
 ```
 collector/
-├── app.py                      # Flask entry point, routes, job management
+├── app.py                      # Thin entry point (uses app_factory)
 ├── app_factory.py              # Application factory pattern
-├── executor_adapter.py         # Task execution abstraction
-├── config.py                   # Configuration with environment variable support
-├── pyproject.toml              # uv project configuration
+├── config.py                   # Backward-compat config exports
+├── config/                     # Configuration package
+│   ├── settings.py             # Environment variable handling
+│   └── database.py             # Database config and connections
+├── routes/                     # Flask blueprints (route handlers)
+│   ├── pages.py                # UI pages (/, /browse, /preview, /history)
+│   ├── jobs.py                 # Job lifecycle routes
+│   ├── sessions.py             # Instagram session management
+│   └── api.py                  # JSON API endpoints
+├── services/                   # Business logic layer
+│   ├── job_service.py          # Job orchestration
+│   ├── scraper_service.py      # Download coordination
+│   ├── session_service.py      # Session workflows
+│   ├── session_manager.py      # Encrypted session storage
+│   └── executor_adapter.py     # Background task execution
+├── repositories/               # Data access layer
+│   ├── job_repository.py       # Job database operations
+│   ├── file_repository.py      # File metadata operations
+│   └── settings_repository.py  # Key-value settings
+├── models/                     # Data models
+│   ├── job.py                  # Job entity
+│   ├── file.py                 # File entity
+│   └── settings.py             # Settings entity
 ├── security/
 │   ├── csrf.py                 # CSRF token generation/validation
 │   └── paths.py                # Path traversal protection
@@ -140,7 +160,8 @@ collector/
 │   ├── youtube/
 │   └── instagram/
 ├── tests/
-└── scraper.db                  # SQLite database
+└── instance/                   # Database and session storage
+    └── scraper.db
 ```
 
 ### Static Asset Policy
