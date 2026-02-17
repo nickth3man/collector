@@ -9,8 +9,8 @@
   {% set parent_path = '/'.join(file_path.split('/')[:-1]) %}
 
   <article class="panel">
-    <div class="action-row" style="justify-content: space-between; gap: 0.75rem">
-      <div class="breadcrumb" style="margin-bottom: 0">
+    <div class="action-row justify-space-between gap-md">
+      <div class="breadcrumb margin-bottom-0">
         <a href="{{ url_for('pages.browse') }}">🏠 Root</a>
         {% set parts = file_path.split('/') %} {% set ns = namespace(path='') %} {% for part in
         parts[:-1] %} {% set ns.path = (ns.path ~ '/' if ns.path else '') ~ part %}

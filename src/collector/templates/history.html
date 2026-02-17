@@ -83,7 +83,7 @@ content %}
         <tbody>
           {% for job in jobs %}
           <tr>
-            <td>
+            <td data-label="Date">
               <p class="row-primary">
                 {{ job.created_at.strftime('%Y-%m-%d') if job.created_at else 'N/A' }}
               </p>
@@ -91,8 +91,8 @@ content %}
                 {{ job.created_at.strftime('%H:%M:%S') if job.created_at else '' }}
               </p>
             </td>
-            <td>
-              <div class="job-meta" style="margin-bottom: 0.35rem">
+            <td data-label="Job">
+              <div class="job-meta margin-bottom-sm">
                 <span class="badge badge-{{ job.platform }}">{{ job.platform }}</span>
               </div>
               {% if job.title %}
@@ -102,7 +102,7 @@ content %}
                 {{ job.url[:72] }}{{ '...' if job.url|length > 72 else '' }}
               </a>
             </td>
-            <td>
+            <td data-label="Status">
               <div class="status-stack">
                 <span class="status-chip status-{{ job.status }}">{{ job.status }}</span>
                 {% if job.progress and job.progress > 0 and job.progress < 100 %}
@@ -110,14 +110,14 @@ content %}
                 {% endif %} {% if job.error_message %}
                 <details>
                   <summary>View error details</summary>
-                  <div class="error-message" style="margin-top: 0.5rem; max-width: 42ch">
+                  <div class="error-message margin-top-md" style="max-width: 42ch">
                     {{ job.error_message }}
                   </div>
                 </details>
                 {% endif %}
               </div>
             </td>
-            <td>
+            <td data-label="Actions">
               <div class="action-row">
                 {% if job.status == 'completed' %}
                 <a
@@ -141,7 +141,7 @@ content %}
               </div>
 
               {% if job.status in ['failed', 'cancelled', 'completed'] %}
-              <div class="action-row" style="margin-top: 0.5rem">
+              <div class="action-row margin-top-md">
                 <form
                   method="post"
                   action="{{ url_for('jobs.delete_job_route', job_id=job.id) }}"
@@ -170,14 +170,14 @@ content %}
       <p>No download history found.</p>
       {% if filters.platform or filters.status %}
       <p class="helper-text">No jobs match the active filters.</p>
-      <div class="action-row" style="justify-content: center; margin-top: 0.75rem">
+      <div class="action-row justify-center margin-top-md">
         <a href="{{ url_for('pages.history') }}" role="button" class="action-secondary">
           Clear Filters
         </a>
       </div>
       {% else %}
       <p class="helper-text">Create your first download job from the dashboard.</p>
-      <div class="action-row" style="justify-content: center; margin-top: 0.75rem">
+      <div class="action-row justify-center margin-top-md">
         <a href="{{ url_for('pages.index') }}" role="button" class="action-primary">
           Go to Dashboard
         </a>

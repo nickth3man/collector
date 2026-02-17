@@ -20,13 +20,13 @@ content %}
 
     <div class="panel-body">
       {% if config.SCRAPER_SESSION_KEY %}
-      <div class="notification success" style="margin: 0">
+      <div class="notification success margin-0">
         <strong>Ready:</strong>
         <code>SCRAPER_SESSION_KEY</code>
         is configured for encrypted session storage.
       </div>
       {% else %}
-      <div class="notification warning" style="margin: 0">
+      <div class="notification warning margin-0">
         <strong>Setup required:</strong>
         No
         <code>SCRAPER_SESSION_KEY</code>
@@ -63,10 +63,10 @@ content %}
         <p class="helper-text">
           Include standard Instagram session cookies (for example: sessionid, ds_user_id, mid).
         </p>
-        <div class="action-row" style="margin-top: 0.9rem">
+        <div class="action-row margin-top-md">
           <button type="submit" class="action-primary">
             Upload Session
-            <span class="htmx-indicator" style="margin-left: 0.35rem">⏳</span>
+            <span class="htmx-indicator loading-indicator">⏳</span>
           </button>
         </div>
       </form>
@@ -85,17 +85,17 @@ content %}
 
     <div class="panel-body">
       {% if sessions %}
-      <div class="card-grid" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr))">
+      <div class="card-grid">
         {% for session in sessions %}
         <div class="panel">
-          <div class="panel-body" style="padding: 0">
-            <div class="job-header" style="margin-bottom: 0">
+          <div class="panel-body padding-0">
+            <div class="job-header margin-bottom-0">
               <div>
                 <h3 class="job-title">
-                  <span style="font-size: 1.2rem; margin-right: 0.35rem">🔑</span>
+                  <span class="session-icon">🔑</span>
                   {{ session.username }}
                 </h3>
-                <div class="job-meta" style="margin-top: 0.35rem">
+                <div class="job-meta margin-top-sm">
                   <span class="badge badge-instagram">Instagram session</span>
                   <span class="job-meta-note">Created: {{ session.created_at[:19] }}Z</span>
                 </div>
@@ -123,7 +123,7 @@ content %}
       <div class="empty-state">
         <div class="empty-state-icon">🔑</div>
         <p>No sessions configured yet.</p>
-        <p class="helper-text" style="margin-top: 0.75rem">
+        <p class="helper-text margin-top-md">
           Upload a cookies file in Step 2 to add one.
         </p>
       </div>
@@ -142,7 +142,7 @@ content %}
     <div class="panel-body">
       <details>
         <summary>How to export Instagram cookies</summary>
-        <ol style="margin-bottom: 0">
+        <ol class="margin-bottom-0">
           <li>
             Install an extension like
             <strong>EditThisCookie</strong>
@@ -167,7 +167,7 @@ content %}
           <code>SCRAPER_SESSION_KEY</code>
           . Keep the key stable across runs.
         </p>
-        <div class="notification warning" style="margin: 0.75rem 0 0">
+        <div class="notification warning margin-top-md margin-bottom-0">
           Never upload cookies from personal Instagram accounts.
         </div>
       </details>

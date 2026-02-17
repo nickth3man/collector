@@ -21,8 +21,7 @@ content %}
         hx-post="{{ url_for('jobs.download') }}"
         hx-target="#active-jobs"
         hx-swap="beforeend"
-        class="url-input-group"
-        style="width: 100%; margin-bottom: 0"
+        class="url-input-group width-full margin-bottom-0"
       >
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
         <input
@@ -35,12 +34,12 @@ content %}
         />
         <button type="submit" class="action-primary">
           Start Download
-          <span class="htmx-indicator" style="margin-left: 0.35rem">⏳</span>
+          <span class="htmx-indicator loading-indicator">⏳</span>
         </button>
       </form>
 
       {% if not config.SECRET_KEY or config.SECRET_KEY == 'dev-secret-key-change-in-production' %}
-      <div class="notification warning" style="margin: 0">
+      <div class="notification warning margin-0">
         <strong>Security notice:</strong>
         The app is using a default
         <code>SECRET_KEY</code>
@@ -87,16 +86,16 @@ content %}
       <details>
         <summary>Supported platforms</summary>
         <div class="card-grid">
-          <div class="panel" style="padding: 0.85rem">
-            <h3 style="margin-bottom: 0.35rem">📺 YouTube</h3>
+          <div class="panel compact-panel">
+            <h3 class="compact-heading">📺 YouTube</h3>
             <p class="helper-text">
               Videos, playlists, and channels with transcripts when available.
             </p>
             <p class="job-meta-note">youtube.com, youtu.be, playlists, channels</p>
           </div>
 
-          <div class="panel" style="padding: 0.85rem">
-            <h3 style="margin-bottom: 0.35rem">📸 Instagram</h3>
+          <div class="panel compact-panel">
+            <h3 class="compact-heading">📸 Instagram</h3>
             <p class="helper-text">
               Photos, videos, reels, and profile posts (cookies recommended).
             </p>
@@ -107,7 +106,7 @@ content %}
 
       <details>
         <summary>Quick start</summary>
-        <ol style="margin-bottom: 0">
+        <ol class="margin-bottom-0">
           <li>
             Paste a supported URL into
             <strong>Start Download</strong>

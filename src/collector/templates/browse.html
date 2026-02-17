@@ -60,12 +60,12 @@ content %}
   <p>This directory is empty.</p>
   {% if is_root %}
   <p class="helper-text">Start by creating a new download from the dashboard.</p>
-  <div class="action-row" style="justify-content: center; margin-top: 0.75rem">
+  <div class="action-row justify-center margin-top-md">
     <a href="{{ url_for('pages.index') }}" role="button">Go to Dashboard</a>
   </div>
   {% else %}
   <p class="helper-text">Move up one level or return to root to continue browsing.</p>
-  <div class="action-row" style="justify-content: center; margin-top: 0.75rem">
+  <div class="action-row justify-center margin-top-md">
     <a href="{{ url_for('pages.browse') }}" class="secondary" role="button">Back to Root</a>
   </div>
   {% endif %}

@@ -28,6 +28,58 @@
     ></script>
 
     <style>
+      /* Design token system */
+      :root {
+        /* Spacing scale (4px base unit) */
+        --spacing-1: 0.25rem;  /* 4px */
+        --spacing-2: 0.5rem;   /* 8px */
+        --spacing-3: 0.75rem;  /* 12px */
+        --spacing-4: 1rem;     /* 16px */
+        --spacing-5: 1.25rem;  /* 20px */
+        --spacing-6: 1.5rem;   /* 24px */
+        --spacing-8: 2rem;     /* 32px */
+
+        /* Border radius scale */
+        --radius-sm: 4px;
+        --radius-md: 8px;
+        --radius-lg: 12px;
+        --radius-pill: 999px;
+
+        /* Color tokens - Status colors */
+        --color-pending: #6b7280;
+        --color-running: #0284c7;
+        --color-completed: #16a34a;
+        --color-failed: #dc2626;
+        --color-cancelled: #4b5563;
+        --color-retrying: #4f46e5;
+
+        /* Color tokens - Notifications */
+        --color-success-bg: #f0fdf4;
+        --color-success-border: #86efac;
+        --color-success-text: #166534;
+
+        --color-error-bg: #fef2f2;
+        --color-error-border: #fca5a5;
+        --color-error-text: #991b1b;
+
+        --color-warning-bg: #fffbeb;
+        --color-warning-border: #fcd34d;
+        --color-warning-text: #92400e;
+
+        --color-info-bg: #eff6ff;
+        --color-info-border: #93c5fd;
+        --color-info-text: #1e40af;
+
+        /* Color tokens - Platform badges */
+        --color-youtube: #dc2626;
+        --color-instagram-start: #f59e0b;
+        --color-instagram-end: #db2777;
+
+        /* Focus ring */
+        --focus-ring: 0 0 0 3px rgba(59, 130, 246, 0.5);
+        --focus-ring-offset: 2px;
+      }
+
       /* Theme tokens */
       :root[data-theme="light"] {
         --pico-background-color: #fff;
@@ -36,6 +88,7 @@
         --pico-card-background-color: #fff;
         --pico-card-border-color: #e5e7eb;
         --pico-border-color: #e5e7eb;
+        --shadow-color: rgba(0, 0, 0, 0.1);
       }
 
       :root[data-theme="dark"] {
@@ -45,6 +98,47 @@
         --pico-card-background-color: #1f1f1f;
         --pico-card-border-color: #374151;
         --pico-border-color: #374151;
+        --shadow-color: rgba(0, 0, 0, 0.3);
+        --focus-ring: 0 0 0 3px rgba(96, 165, 250, 0.4);
+      }
+
+      /* Comprehensive focus states for accessibility */
+      :focus-visible {
+        outline: none;
+        box-shadow: var(--focus-ring);
+        outline-offset: var(--focus-ring-offset);
+      }
+
+      /* Ensure all interactive elements can receive focus */
+      a,
+      button,
+      [role="button"],
+      input,
+      select,
+      textarea,
+      [tabindex="0"] {
+        &:focus-visible {
+          outline: none;
+          box-shadow: var(--focus-ring);
+          outline-offset: var(--focus-ring-offset);
+        }
+      }
+
+      /* Navigation links focus */
+      .nav-links a:focus-visible {
+        border-radius: var(--radius-pill);
+      }
+
+      /* Theme toggle focus */
+      .theme-toggle:focus-visible {
+        border-radius: 50%;
+      }
+
+      /* Action buttons focus */
+      .action-primary:focus-visible,
+      .action-secondary:focus-visible,
+      .action-danger:focus-visible {
+        border-radius: var(--radius-sm);
       }
 
       body {
@@ -92,11 +186,15 @@
         color: var(--pico-muted-color);
         transition:
           color 0.2s,
-          background-color 0.2s;
-        border-radius: 999px;
-        padding: 0.3rem 0.65rem;
+          background-color 0.2s,
+          box-shadow 0.2s;
+        border-radius: var(--radius-pill);
+        padding: 0.5rem 0.85rem;
         font-size: 0.9rem;
         font-weight: 600;
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
       }
 
       .nav-links a:hover {
@@ -114,17 +212,22 @@
         background: none;
         border: 1px solid var(--pico-border-color);
         border-radius: 50%;
-        width: 36px;
-        height: 36px;
+        width: 44px;
+        height: 44px;
         padding: 0;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
+        transition: background-color 0.2s, transform 0.15s;
       }
 
       .theme-toggle:hover {
         background: color-mix(in srgb, var(--pico-muted-color) 20%, transparent);
+      }
+
+      .theme-toggle:active {
+        transform: scale(0.95);
       }
 
       /* Main layout */
@@ -165,8 +268,8 @@
 
       .panel {
         border: 1px solid var(--pico-border-color);
-        border-radius: 12px;
-        padding: 1rem 1.1rem;
+        border-radius: var(--radius-lg);
+        padding: var(--spacing-4) 1.1rem;
         background: var(--pico-card-background-color);
       }
 
@@ -279,15 +382,16 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 0.3rem;
+        gap: var(--spacing-2);
         padding: 0.42rem 0.8rem;
-        border-radius: 6px;
+        border-radius: var(--radius-sm);
         border: 1px solid transparent;
         font-size: 0.875rem;
         font-weight: 600;
         text-decoration: none;
         line-height: 1.25;
         cursor: pointer;
+        transition: all 0.2s ease;
       }
 
       .action-primary {
@@ -297,8 +401,13 @@
       }
 
       .action-primary:hover {
-        filter: brightness(0.95);
+        background: color-mix(in srgb, var(--pico-primary) 90%, #000);
+        border-color: color-mix(in srgb, var(--pico-primary) 90%, #000);
         color: #fff;
+      }
+
+      .action-primary:active {
+        transform: translateY(1px);
       }
 
       .action-secondary {
@@ -312,15 +421,24 @@
         color: var(--pico-color);
       }
 
+      .action-secondary:active {
+        transform: translateY(1px);
+      }
+
       .action-danger {
-        background: #fff7f7;
-        border-color: #fecaca;
-        color: #b91c1c;
+        background: var(--color-error-bg);
+        border-color: var(--color-error-border);
+        color: var(--color-error-text);
       }
 
       .action-danger:hover {
-        background: #fee2e2;
-        color: #991b1b;
+        background: color-mix(in srgb, var(--color-error-text) 5%, var(--color-error-bg));
+        border-color: color-mix(in srgb, var(--color-error-text) 20%, var(--color-error-border));
+        color: var(--color-error-text);
+      }
+
+      .action-danger:active {
+        transform: translateY(1px);
       }
 
       /* Job card */
@@ -396,61 +514,61 @@
       }
 
       .status-pending {
-        background: #6b7280;
+        background: var(--color-pending);
       }
 
       .status-running {
-        background: #0ea5e9;
+        background: var(--color-running);
       }
 
       .status-completed {
-        background: #22c55e;
+        background: var(--color-completed);
       }
 
       .status-failed {
-        background: #ef4444;
+        background: var(--color-failed);
       }
 
       .status-cancelled {
-        background: #4b5563;
+        background: var(--color-cancelled);
       }
 
       .status-retrying {
-        background: #6366f1;
+        background: var(--color-retrying);
       }
 
       .badge-youtube {
-        background: #ff0000;
+        background: var(--color-youtube);
         color: white;
       }
 
       .badge-instagram {
-        background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+        background: linear-gradient(45deg, var(--color-instagram-start), var(--color-instagram-end));
         color: white;
       }
 
       .badge-pending {
-        background: var(--pico-muted-color);
+        background: var(--color-pending);
         color: var(--pico-background-color);
       }
 
       .badge-running {
-        background: #0ea5e9;
+        background: var(--color-running);
         color: white;
       }
 
       .badge-completed {
-        background: #22c55e;
+        background: var(--color-completed);
         color: white;
       }
 
       .badge-failed {
-        background: #ef4444;
+        background: var(--color-failed);
         color: white;
       }
 
       .badge-cancelled {
-        background: #6b7280;
+        background: var(--color-cancelled);
         color: white;
       }
 
@@ -565,18 +683,24 @@
       .file-item {
         border: 1px solid var(--pico-border-color);
         border-radius: 10px;
-        padding: 1rem;
+        padding: var(--spacing-4);
         text-align: center;
         cursor: pointer;
         transition:
           transform 0.2s,
-          box-shadow 0.2s;
+          box-shadow 0.2s,
+          border-color 0.2s;
         background: var(--pico-card-background-color);
       }
 
       .file-item:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 12px var(--shadow-color);
+        border-color: var(--pico-primary);
+      }
+
+      .file-item:focus-visible {
+        box-shadow: var(--focus-ring), 0 4px 12px var(--shadow-color);
       }
 
       .file-icon {
@@ -615,33 +739,39 @@
 
       /* Notifications */
       .notification {
-        padding: 1rem;
-        border-radius: 8px;
-        margin-bottom: 1rem;
+        padding: var(--spacing-4);
+        border-radius: var(--radius-md);
+        margin-bottom: var(--spacing-4);
+        position: relative;
+        transition: opacity 0.3s ease;
+      }
+
+      .notification:hover {
+        opacity: 1 !important;
       }
 
       .notification.error {
-        background: #fef2f2;
-        border: 1px solid #fecaca;
-        color: #991b1b;
+        background: var(--color-error-bg);
+        border: 1px solid var(--color-error-border);
+        color: var(--color-error-text);
       }
 
       .notification.success {
-        background: #f0fdf4;
-        border: 1px solid #bbf7d0;
-        color: #166534;
+        background: var(--color-success-bg);
+        border: 1px solid var(--color-success-border);
+        color: var(--color-success-text);
       }
 
       .notification.warning {
-        background: #fffbeb;
-        border: 1px solid #fde68a;
-        color: #92400e;
+        background: var(--color-warning-bg);
+        border: 1px solid var(--color-warning-border);
+        color: var(--color-warning-text);
       }
 
       .notification.info {
-        background: #eff6ff;
-        border: 1px solid #bfdbfe;
-        color: #1e3a8a;
+        background: var(--color-info-bg);
+        border: 1px solid var(--color-info-border);
+        color: var(--color-info-text);
       }
 
       /* Empty state */
@@ -653,8 +783,97 @@
 
       .empty-state-icon {
         font-size: 4rem;
-        margin-bottom: 1rem;
+        margin-bottom: var(--spacing-4);
         opacity: 0.5;
+      }
+
+      .empty-state p {
+        font-size: 1rem;
+        line-height: 1.5;
+        margin: var(--spacing-2) 0;
+      }
+
+      .empty-state p:first-of-type {
+        font-weight: 500;
+        color: var(--pico-color);
+      }
+
+      /* Utility classes */
+      .justify-space-between {
+        justify-content: space-between;
+      }
+
+      .width-full {
+        width: 100%;
+      }
+
+      .margin-0 {
+        margin: 0;
+      }
+
+      .margin-bottom-0 {
+        margin-bottom: 0;
+      }
+
+      .margin-top-0 {
+        margin-top: 0;
+      }
+
+      .padding-sm {
+        padding: var(--spacing-3);
+      }
+
+      .padding-md {
+        padding: var(--spacing-4);
+      }
+
+      .padding-lg {
+        padding: var(--spacing-6);
+      }
+
+      .text-center {
+        text-align: center;
+      }
+
+      .justify-center {
+        justify-content: center;
+      }
+
+      .gap-sm {
+        gap: var(--spacing-2);
+      }
+
+      .gap-md {
+        gap: var(--spacing-3);
+      }
+
+      .loading-indicator {
+        margin-left: var(--spacing-2);
+      }
+
+      .compact-panel {
+        padding: var(--spacing-3);
+      }
+
+      .compact-heading {
+        margin-bottom: var(--spacing-2);
+      }
+
+      .margin-bottom-sm {
+        margin-bottom: var(--spacing-2);
+      }
+
+      .margin-top-md {
+        margin-top: var(--spacing-3);
+      }
+
+      .padding-0 {
+        padding: 0;
+      }
+
+      .session-icon {
+        font-size: 1.2rem;
+        margin-right: var(--spacing-2);
       }
 
       /* Error messages */
@@ -691,18 +910,47 @@
 
       details {
         border: 1px solid var(--pico-border-color);
-        border-radius: 8px;
-        padding: 0.75rem 1rem;
+        border-radius: var(--radius-md);
+        padding: var(--spacing-3) var(--spacing-4);
         background: color-mix(in srgb, var(--pico-card-background-color) 95%, transparent);
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      details:hover {
+        border-color: color-mix(in srgb, var(--pico-primary) 30%, var(--pico-border-color));
       }
 
       details > summary {
         cursor: pointer;
         font-weight: 600;
+        list-style: none;
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-2);
+        transition: color 0.2s ease;
+      }
+
+      details > summary::-webkit-details-marker {
+        display: none;
+      }
+
+      details > summary::before {
+        content: "▶";
+        font-size: 0.7rem;
+        transition: transform 0.2s ease;
+        display: inline-block;
+      }
+
+      details[open] > summary::before {
+        transform: rotate(90deg);
+      }
+
+      details > summary:hover {
+        color: var(--pico-primary);
       }
 
       details > *:not(summary) {
-        margin-top: 0.75rem;
+        margin-top: var(--spacing-3);
       }
 
       /* Responsive */
@@ -772,6 +1020,20 @@
         .history-table td {
           border: 0;
           padding: 0.35rem 0.75rem;
+          position: relative;
+          padding-left: 50%;
+        }
+
+        .history-table td:before {
+          content: attr(data-label);
+          position: absolute;
+          left: 0.75rem;
+          width: 45%;
+          padding-right: 0.75rem;
+          white-space: nowrap;
+          font-weight: 600;
+          color: var(--pico-muted-color);
+          font-size: 0.85rem;
         }
       }
 
@@ -887,12 +1149,26 @@
         updateThemeIcon(currentTheme);
       });
 
-      // Auto-dismiss notifications after 5 seconds
+      // Auto-dismiss notifications after 5 seconds, pause on hover
       document.querySelectorAll(".notification").forEach((notification) => {
-        setTimeout(() => {
+        let timeoutId;
+
+        function dismissNotification() {
           notification.style.opacity = "0";
           setTimeout(() => notification.remove(), 300);
-        }, 5000);
+        }
+
+        timeoutId = setTimeout(dismissNotification, 5000);
+
+        // Pause auto-dismiss on hover
+        notification.addEventListener("mouseenter", () => {
+          clearTimeout(timeoutId);
+        });
+
+        // Resume auto-dismiss when mouse leaves
+        notification.addEventListener("mouseleave", () => {
+          timeoutId = setTimeout(dismissNotification, 2000);
+        });
       });
     </script>
 
