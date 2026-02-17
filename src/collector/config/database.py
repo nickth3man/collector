@@ -11,6 +11,7 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
+import re
 
 from flask import current_app, g
 
@@ -91,6 +92,135 @@ class DatabaseConfig:
             cursor = conn.executemany(query, params_list)
             conn.commit()
             return cursor.rowcount
+
+    def create_indexes(self, model_classes: list[type]) -> None:
+        """Create indexes for the given model classes.
+
+        Args:
+            model_classes: List of model classes to create indexes for.
+        """
+        print("Creating database indexes...")
+
+        with self.get_connection() as conn:
+            for model_class in model_classes:
+                table_name = model_class.get_table_name()
+                index_sqls = model_class.get_indexes_sql()
+
+                if not index_sqls:
+                    continue
+
+                print(f"\n{table_name}:")
+                for index_sql in index_sqls:
+                    try:
+                        # Extract index name for logging
+                        match = re.search(
+                            r'CREATE\s+(?:UNIQUE\s+)?INDEX\s+IF\s+NOT\s+EXISTS\s+(\w+)',
+                            index_sql,
+                            re.IGNORECASE
+                        )
+                        index_name = match.group(1) if match else "unknown"
+
+                        conn.execute(index_sql)
+                        print(f"  ✓ Created: {index_name}")
+                    except sqlite3.OperationalError as e:
+                        print(f"  ✗ Error: {e}")
+
+            conn.commit()
+            print("\nIndex creation complete!")
+
+    def ensure_indexes(self, model_classes: list[type]) -> None:
+        """Ensure all indexes exist for the given models.
+
+        This method checks for existing indexes and creates any missing ones.
+
+        Args:
+            model_classes: List of model classes to check/create indexes for.
+        """
+        print("Ensuring database indexes exist...")
+
+        with self.get_connection() as conn:
+            for model_class in model_classes:
+                table_name = model_class.get_table_name()
+
+                # Get existing indexes for this table
+                existing_indexes = conn.execute(
+                    f"SELECT name FROM sqlite_master "
+                    f"WHERE type='index' AND tbl_name='{table_name}' AND name LIKE 'idx_%'"
+                ).fetchall()
+
+                existing_index_names = {row[0] for row in existing_indexes}
+
+                # Get required indexes
+                index_sqls = model_class.get_indexes_sql()
+
+                if not index_sqls:
+                    continue
+
+                print(f"\n{table_name}:")
+
+                for index_sql in index_sqls:
+                    # Extract index name
+                    match = re.search(
+                        r'CREATE\s+(?:UNIQUE\s+)?INDEX\s+IF\s+NOT\s+EXISTS\s+(\w+)',
+                        index_sql,
+                        re.IGNORECASE
+                    )
+
+                    if match:
+                        index_name = match.group(1)
+
+                        if index_name not in existing_index_names:
+                            try:
+                                conn.execute(index_sql)
+                                print(f"  ✓ Created: {index_name}")
+                            except sqlite3.OperationalError as e:
+                                print(f"  ✗ Error creating {index_name}: {e}")
+                        else:
+                            print(f"  ✓ Exists: {index_name}")
+
+            conn.commit()
+            print("\nIndex verification complete!")
+
+    def initialize_schema(self, model_classes: list[type]) -> None:
+        """Initialize database schema including tables and indexes.
+
+        Args:
+            model_classes: List of model classes to initialize.
+        """
+        print("Initializing database schema...")
+
+        # Create tables first
+        for model_class in model_classes:
+            table_name = model_class.get_table_name()
+            create_sql = model_class.get_create_table_sql()
+
+            with self.get_connection() as conn:
+                conn.execute(create_sql)
+                conn.commit()
+                print(f"  ✓ Table: {table_name}")
+
+        # Then ensure indexes exist
+        self.ensure_indexes(model_classes)
+
+        print("Schema initialization complete!")
+
+    def get_index_info(self, table_name: str) -> list[dict[str, Any]]:
+        """Get information about indexes for a table.
+
+        Args:
+            table_name: Name of the table to get index info for.
+
+        Returns:
+            List of dictionaries containing index information.
+        """
+        with self.get_connection() as conn:
+            indexes = conn.execute(
+                f"SELECT name, sql FROM sqlite_master "
+                f"WHERE type='index' AND tbl_name='{table_name}' AND name LIKE 'idx_%' "
+                f"ORDER BY name"
+            ).fetchall()
+
+            return [{"name": row[0], "sql": row[1]} for row in indexes]
 
     def initialize_tables(self) -> None:
         """Initialize database tables if they don't exist."""

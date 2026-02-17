@@ -7,7 +7,7 @@ This module provides the Settings model class for managing application settings 
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any
+from typing import Any, ClassVar
 
 from .base import BaseModel
 
@@ -24,6 +24,9 @@ class Settings(BaseModel):
 
     # Primary key field name (different from base model)
     primary_key = "key"
+
+    # No indexes needed for settings table (primary key is sufficient)
+    indexes: ClassVar[list[dict[str, Any]]] = []
 
     def __init__(self, **kwargs: Any) -> None:
         """Initialize the Settings model with provided attributes.
@@ -58,7 +61,7 @@ class Settings(BaseModel):
         Returns:
             Tuple of (SQL statement, parameters).
         """
-        data = self.to_dict(exclude=["primary_key", "table_name"])
+        data = self.to_dict(exclude=["primary_key", "table_name", "indexes"])
         columns = ", ".join(data.keys())
         placeholders = ", ".join(["?" for _ in data])
         values = tuple(data.values())
@@ -76,7 +79,7 @@ class Settings(BaseModel):
         Returns:
             Tuple of (SQL statement, parameters).
         """
-        data = self.to_dict(exclude=["key", "primary_key", "table_name"])
+        data = self.to_dict(exclude=["key", "primary_key", "table_name", "indexes"])
 
         # Update the timestamp
         data["updated_at"] = datetime.utcnow().isoformat()

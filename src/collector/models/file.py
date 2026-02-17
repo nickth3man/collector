@@ -7,7 +7,7 @@ This module provides the File model class for managing file records in the datab
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any
+from typing import Any, ClassVar
 
 from .base import BaseModel
 
@@ -24,6 +24,30 @@ class File(BaseModel):
 
     # Primary key field name (different from base model)
     primary_key = "id"
+
+    # Index definitions for performance
+    indexes: ClassVar[list[dict[str, Any]]] = [
+        {
+            "columns": ["job_id"],
+            "unique": False,
+            "name": "idx_files_job_id"
+        },
+        {
+            "columns": ["file_type"],
+            "unique": False,
+            "name": "idx_files_file_type"
+        },
+        {
+            "columns": [("created_at", "DESC")],
+            "unique": False,
+            "name": "idx_files_created_at"
+        },
+        {
+            "columns": ["job_id", "file_type"],
+            "unique": False,
+            "name": "idx_files_job_id_type"
+        }
+    ]
 
     def __init__(self, **kwargs: Any) -> None:
         """Initialize the File model with provided attributes.
@@ -107,7 +131,7 @@ class File(BaseModel):
         Returns:
             Tuple of (SQL statement, parameters).
         """
-        data = self.to_dict(exclude=["primary_key", "table_name"])
+        data = self.to_dict(exclude=["primary_key", "table_name", "indexes"])
         columns = ", ".join(data.keys())
         placeholders = ", ".join(["?" for _ in data])
         values = tuple(data.values())
@@ -125,7 +149,7 @@ class File(BaseModel):
         Returns:
             Tuple of (SQL statement, parameters).
         """
-        data = self.to_dict(exclude=["id", "created_at", "primary_key", "table_name"])
+        data = self.to_dict(exclude=["id", "created_at", "primary_key", "table_name", "indexes"])
 
         # Note: files table doesn't have updated_at, so we don't add it
         set_clause = ", ".join([f"{key} = ?" for key in data.keys()])

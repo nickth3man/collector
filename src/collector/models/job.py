@@ -7,7 +7,7 @@ This module provides the Job model class for managing job records in the databas
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any
+from typing import Any, ClassVar
 
 from .base import BaseModel
 
@@ -21,6 +21,30 @@ class Job(BaseModel):
 
     # Table name for this model
     table_name = "jobs"
+
+    # Index definitions for performance
+    indexes: ClassVar[list[dict[str, Any]]] = [
+        {
+            "columns": ["status"],
+            "unique": False,
+            "name": "idx_jobs_status"
+        },
+        {
+            "columns": ["platform"],
+            "unique": False,
+            "name": "idx_jobs_platform"
+        },
+        {
+            "columns": [("created_at", "DESC")],
+            "unique": False,
+            "name": "idx_jobs_created_at"
+        },
+        {
+            "columns": ["status", ("created_at", "DESC")],
+            "unique": False,
+            "name": "idx_jobs_status_created"
+        }
+    ]
 
     def __init__(self, **kwargs: Any) -> None:
         """Initialize the Job model with provided attributes.
@@ -73,7 +97,7 @@ class Job(BaseModel):
         Returns:
             Tuple of (SQL statement, parameters).
         """
-        data = self.to_dict(exclude=["primary_key", "table_name"])
+        data = self.to_dict(exclude=["primary_key", "table_name", "indexes"])
         columns = ", ".join(data.keys())
         placeholders = ", ".join(["?" for _ in data])
         values = tuple(data.values())
@@ -91,7 +115,7 @@ class Job(BaseModel):
         Returns:
             Tuple of (SQL statement, parameters).
         """
-        data = self.to_dict(exclude=["id", "created_at", "primary_key", "table_name"])
+        data = self.to_dict(exclude=["id", "created_at", "primary_key", "table_name", "indexes"])
 
         # Update the timestamp
         data["updated_at"] = datetime.utcnow().isoformat()

@@ -9,6 +9,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, ClassVar, TypeVar
 from uuid import uuid4
+import re
 
 T = TypeVar("T", bound="BaseModel")
 
@@ -25,6 +26,9 @@ class BaseModel:
 
     # Primary key field name
     primary_key: ClassVar[str] = "id"
+
+    # Index definitions (to be overridden by subclasses)
+    indexes: ClassVar[list[dict[str, Any]]] = []
 
     def __init__(self, **kwargs: Any) -> None:
         """Initialize the model with provided attributes.
@@ -126,6 +130,60 @@ class BaseModel:
             updated_at TIMESTAMP NOT NULL
         )
         """
+
+    @classmethod
+    def get_indexes_sql(cls) -> list[str]:
+        """Get SQL statements to create indexes for this model.
+
+        Returns:
+            List of CREATE INDEX SQL statements.
+        """
+        table_name = cls.get_table_name()
+        index_statements = []
+
+        for index_def in cls.indexes:
+            columns = index_def["columns"]
+            unique = index_def.get("unique", False)
+            index_name = index_def.get("name", cls._generate_index_name(columns))
+
+            # Build column list with optional DESC
+            column_defs = []
+            for col in columns:
+                if isinstance(col, tuple):
+                    # (column_name, direction)
+                    column_defs.append(f"{col[0]} {col[1]}")
+                else:
+                    column_defs.append(str(col))
+
+            columns_str = ", ".join(column_defs)
+            unique_str = "UNIQUE " if unique else ""
+
+            sql = f"CREATE {unique_str}INDEX IF NOT EXISTS {index_name} ON {table_name}({columns_str})"
+            index_statements.append(sql)
+
+        return index_statements
+
+    @classmethod
+    def _generate_index_name(cls, columns: list[Any]) -> str:
+        """Generate a consistent index name from columns.
+
+        Args:
+            columns: List of column definitions.
+
+        Returns:
+            Generated index name.
+        """
+        table_name = cls.get_table_name()
+        col_names = []
+
+        for col in columns:
+            if isinstance(col, tuple):
+                col_names.append(col[0])
+            else:
+                col_names.append(str(col))
+
+        cols_str = "_".join(col_names)
+        return f"idx_{table_name}_{cols_str}"
 
     def get_insert_sql(self) -> tuple[str, tuple[Any, ...]]:
         """Get SQL statement and parameters for inserting this model.

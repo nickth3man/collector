@@ -37,6 +37,7 @@ src/collector/services/job_service.py
 src/collector/services/scraper_service.py
 src/collector/services/session_manager.py
 src/collector/services/session_service.py
+tests/test_config.py
 tests/test_instagram_scraper.py
 tests/test_job_service.py
 tests/test_scraper_service.py

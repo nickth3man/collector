@@ -1,5 +1,12 @@
 # Content Collector
 
+[![Tests](https://github.com/nickth3man/collector/actions/workflows/test.yml/badge.svg)](https://github.com/nickth3man/collector/actions/workflows/test.yml)
+[![Lint](https://github.com/nickth3man/collector/actions/workflows/lint.yml/badge.svg)](https://github.com/nickth3man/collector/actions/workflows/lint.yml)
+[![Config](https://github.com/nickth3man/collector/actions/workflows/validate-config.yml/badge.svg)](https://github.com/nickth3man/collector/actions/workflows/validate-config.yml)
+
+[![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
 A Flask-based web application for downloading media from Instagram and YouTube with real-time progress tracking.
 
 ## Features

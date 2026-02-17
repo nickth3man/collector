@@ -11,6 +11,12 @@ from pathlib import Path
 class Config:
     """Centralized configuration with environment variable support."""
 
+    # Validation Constants
+    MIN_CONCURRENT_JOBS: int = 1
+    MAX_CONCURRENT_JOBS: int = 10
+    MIN_DISK_WARNING_MB: int = 100
+    DEFAULT_DISK_WARNING_MB: int = 1024
+
     # Paths
     SCRAPER_DOWNLOAD_DIR: Path = Path(os.environ.get("SCRAPER_DOWNLOAD_DIR", "./downloads"))
     SCRAPER_DB_PATH: Path = Path(os.environ.get("SCRAPER_DB_PATH", "./instance/scraper.db"))
@@ -23,7 +29,7 @@ class Config:
     SCRAPER_IG_DELAY_MAX: float = float(os.environ.get("SCRAPER_IG_DELAY_MAX", "10.0"))
 
     # Disk space warnings (in MB)
-    SCRAPER_DISK_WARN_MB: int = int(os.environ.get("SCRAPER_DISK_WARN_MB", "1024"))
+    SCRAPER_DISK_WARN_MB: int = int(os.environ.get("SCRAPER_DISK_WARN_MB", str(DEFAULT_DISK_WARNING_MB)))
 
     # Security - Flask
     SECRET_KEY: str = os.environ.get("FLASK_SECRET_KEY", "dev-secret-key-change-in-production")
@@ -67,8 +73,8 @@ class Config:
                 errors.append(f"Cannot create download directory {cls.SCRAPER_DOWNLOAD_DIR}: {e}")
 
         # Validate numeric ranges
-        if cls.SCRAPER_MAX_CONCURRENT < 1 or cls.SCRAPER_MAX_CONCURRENT > 10:
-            errors.append("SCRAPER_MAX_CONCURRENT must be between 1 and 10")
+        if cls.SCRAPER_MAX_CONCURRENT < cls.MIN_CONCURRENT_JOBS or cls.SCRAPER_MAX_CONCURRENT > cls.MAX_CONCURRENT_JOBS:
+            errors.append(f"SCRAPER_MAX_CONCURRENT must be between {cls.MIN_CONCURRENT_JOBS} and {cls.MAX_CONCURRENT_JOBS}")
 
         if cls.SCRAPER_IG_DELAY_MIN < 0:
             errors.append("SCRAPER_IG_DELAY_MIN must be non-negative")
@@ -76,8 +82,8 @@ class Config:
         if cls.SCRAPER_IG_DELAY_MAX <= cls.SCRAPER_IG_DELAY_MIN:
             errors.append("SCRAPER_IG_DELAY_MAX must be greater than SCRAPER_IG_DELAY_MIN")
 
-        if cls.SCRAPER_DISK_WARN_MB < 100:
-            errors.append("SCRAPER_DISK_WARN_MB should be at least 100 MB")
+        if cls.SCRAPER_DISK_WARN_MB < cls.MIN_DISK_WARNING_MB:
+            errors.append(f"SCRAPER_DISK_WARN_MB should be at least {cls.MIN_DISK_WARNING_MB} MB")
 
         return errors
 

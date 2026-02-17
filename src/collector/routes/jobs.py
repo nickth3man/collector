@@ -16,7 +16,29 @@ jobs_bp = Blueprint("jobs", __name__)
 
 @jobs_bp.route("/job/<job_id>")
 def job_detail(job_id: str):
-    """Job detail page or HTMX partial."""
+    """Get job detail page or HTMX partial.
+
+    Retrieves job information and associated files, returning either
+    a full page or HTMX fragment depending on the request type.
+
+    Args:
+        job_id: Unique job identifier from URL path
+
+    Returns:
+        HTML:
+            - If HX-Request header present: Partial template (partials/job_card.html)
+            - If no HX-Request header: Full page (job_detail.html)
+            Both templates include:
+                - job: Job object with current status
+                - files: List of associated files
+
+    Raises:
+        HTTPException: 404 if job not found
+
+    HTMX Behavior:
+        If HX-Request header present: Returns partial HTML fragment (job_card.html)
+        If no HX-Request header: Returns full page (job_detail.html)
+    """
     job_service = JobService()
     job = job_service.get_job(job_id)
     if not job:
@@ -33,7 +55,30 @@ def job_detail(job_id: str):
 
 @jobs_bp.route("/job/<job_id>/status")
 def job_status(job_id: str):
-    """Job status as HTMX fragment for polling."""
+    """Get job status as HTMX fragment for polling.
+
+    This route is designed for HTMX polling to update job status
+    on the dashboard without full page refresh.
+
+    Args:
+        job_id: Unique job identifier from URL path
+
+    Returns:
+        HTML: Partial template (partials/job_card.html) with:
+            - job: Job object with current status
+            - files: List of associated files
+
+    Raises:
+        HTTPException: 404 if job not found
+
+    HTMX Behavior:
+        Returns minimal HTML fragment for efficient polling updates.
+        Designed for use with hx-trigger="every 2s" or similar.
+
+    Note:
+        This route is optimized for frequent polling and returns
+        only the job card fragment, not a full page.
+    """
     job_service = JobService()
     job = job_service.get_job(job_id)
     if not job:
@@ -46,7 +91,18 @@ def job_status(job_id: str):
 
 @jobs_bp.route("/jobs/active")
 def active_jobs():
-    """Active jobs as HTMX fragment."""
+    """Get active jobs as HTMX fragment.
+
+    Retrieves all currently active jobs for display in the dashboard.
+
+    Returns:
+        HTML: Partial template (partials/active_jobs.html) with:
+            - jobs: List of active Job objects
+
+    HTMX Behavior:
+        Returns HTML fragment for updating the active jobs section.
+        Typically used for polling or conditional updates.
+    """
     job_service = JobService()
     jobs = job_service.get_active_jobs()
 
@@ -55,7 +111,40 @@ def active_jobs():
 
 @jobs_bp.route("/download", methods=["POST"])
 def download():
-    """Accept URL input, create background job."""
+    """Create and submit a download job for the given URL.
+
+    Validates the URL, detects the platform, creates a job record,
+    and submits it for background processing via the executor.
+
+    Form Parameters:
+        url: Target URL to download (required)
+
+    Returns:
+        HTML/Response:
+            - If HTMX request: Partial HTML (partials/job_card.html)
+            - If regular request: Redirect to dashboard
+            - On validation error: Error notification with status code
+
+    Raises:
+        HTTPException: 403 if CSRF token validation fails
+
+    CSRF:
+        Requires CSRF token validation via validate_csrf_request()
+
+    HTMX Behavior:
+        If HX-Request header present:
+            - Success: Returns job_card.html partial
+            - Validation error: Returns error notification div with 400
+            - CSRF error: Returns error notification div with 403
+        If no HX-Request header:
+            - Success: Flash message and redirect to dashboard
+            - Errors: Flash message and redirect to dashboard
+
+    Validation Errors:
+        - Empty URL: Returns 400 with error message
+        - Invalid URL format: Returns 400 with validation error
+        - Unrecognized platform: Returns 400 with platform error
+    """
     if not validate_csrf_request(request):
         if "HX-Request" in request.headers:
             return '<div class="notification error">CSRF validation failed</div>', 403
@@ -93,7 +182,32 @@ def download():
 
 @jobs_bp.route("/job/<job_id>/cancel", methods=["POST"])
 def cancel_job(job_id: str):
-    """Cancel a running job."""
+    """Cancel a running or pending job.
+
+    Attempts to cancel the job if it's in a cancellable state
+    (pending, running, or retrying).
+
+    Args:
+        job_id: Unique job identifier from URL path
+
+    Returns:
+        Response:
+            - If HTMX request and successful: Empty response with 204
+            - If HTMX request and job not found: 404 error
+            - If regular request: Flash message and redirect to dashboard
+            - If job cannot be cancelled: Flash error message
+
+    Raises:
+        HTTPException: 403 if CSRF token validation fails
+        HTTPException: 404 if job not found
+
+    CSRF:
+        Requires CSRF token validation via validate_csrf_request()
+
+    HTMX Behavior:
+        If HX-Request header present and successful: Returns 204 No Content
+        If no HX-Request header: Flash message and redirect to dashboard
+    """
     if not validate_csrf_request(request):
         abort(403, "CSRF token validation failed")
 
@@ -114,7 +228,34 @@ def cancel_job(job_id: str):
 
 @jobs_bp.route("/job/<job_id>/retry", methods=["POST"])
 def retry_job(job_id: str):
-    """Retry a failed job."""
+    """Retry a failed job by creating a new job with the same parameters.
+
+    Creates a new job based on the original job's URL and platform,
+    then submits it for background processing. Only failed jobs can be retried.
+
+    Args:
+        job_id: Unique job identifier of the failed job to retry
+
+    Returns:
+        HTML/Response:
+            - If HTMX request and successful: Partial HTML (partials/job_card.html)
+            - If regular request and successful: Flash message and redirect to dashboard
+            - If job is not failed: Flash error message and redirect to dashboard
+
+    Raises:
+        HTTPException: 403 if CSRF token validation fails
+
+    CSRF:
+        Requires CSRF token validation via validate_csrf_request()
+
+    HTMX Behavior:
+        If HX-Request header present and successful: Returns job_card.html partial
+        If no HX-Request header: Flash message and redirect to dashboard
+
+    Note:
+        Only jobs with status "failed" can be retried.
+        A new job is created with a new ID.
+    """
     if not validate_csrf_request(request):
         abort(403, "CSRF token validation failed")
 
@@ -137,7 +278,36 @@ def retry_job(job_id: str):
 
 @jobs_bp.route("/job/<job_id>", methods=["DELETE"])
 def delete_job_route(job_id: str):
-    """Delete a job and its files."""
+    """Delete a job record and its associated files.
+
+    Permanently removes the job from the database and deletes all
+    associated downloaded files from disk.
+
+    Args:
+        job_id: Unique job identifier from URL path
+
+    Returns:
+        Response:
+            - If HTMX request and successful: Empty response with 204
+            - If HTMX request and not found: Error message with 404
+            - If regular request: Flash message and redirect to history page
+            - If job not found: Flash error message or 404 for HTMX
+
+    Raises:
+        HTTPException: 403 if CSRF token validation fails
+
+    CSRF:
+        Requires CSRF token validation via validate_csrf_request()
+
+    HTMX Behavior:
+        If HX-Request header present and successful: Returns 204 No Content
+        If HX-Request header and job not found: Returns error message with 404
+        If no HX-Request header: Flash message and redirect to history page
+
+    Warning:
+        This operation is irreversible. All files associated with the job
+        will be permanently deleted from disk.
+    """
     if not validate_csrf_request(request):
         abort(403, "CSRF token validation failed")
 

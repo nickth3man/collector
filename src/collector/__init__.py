@@ -77,11 +77,22 @@ def create_app() -> Flask:
             return "Server error", 500
         return render_template("error.html", error="Server error"), 500
 
+    from .models.file import File
+    from .models.job import Job
+    from .models.settings import Settings
     from .repositories.file_repository import FileRepository
     from .repositories.job_repository import JobRepository
     from .repositories.settings_repository import SettingsRepository
 
     with app.app_context():
+        # Initialize database schema (tables and indexes)
+        from .config.database import get_db_config
+
+        db_config = get_db_config()
+        model_classes = [Job, File, Settings]
+        db_config.initialize_schema(model_classes)
+
+        # Initialize repositories
         JobRepository()
         FileRepository()
         SettingsRepository()

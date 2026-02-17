@@ -50,9 +50,9 @@ class InstagramScraper(BaseScraper):
             job_id: Job ID for tracking
 
         Returns:
-            Result dictionary with success status, files, metadata
+            Scrape result dictionary with success status, files, metadata
         """
-        result: dict[str, Any] = {
+        scrape_result: dict[str, Any] = {
             "success": False,
             "title": None,
             "files": [],
@@ -72,13 +72,13 @@ class InstagramScraper(BaseScraper):
             elif url_type == "post":
                 return self._scrape_post(url, job_id)
             else:
-                result["error"] = f"Unsupported URL type: {url_type}"
-                return result
+                scrape_result["error"] = f"Unsupported URL type: {url_type}"
+                return scrape_result
 
         except Exception as e:
             logger.exception("Error scraping Instagram URL: %s", url)
-            result["error"] = str(e)
-            return result
+            scrape_result["error"] = str(e)
+            return scrape_result
 
     def _detect_url_type(self, url: str) -> str:
         """Detect the type of Instagram URL.
@@ -193,9 +193,9 @@ class InstagramScraper(BaseScraper):
             job_id: Job ID
 
         Returns:
-            Result dictionary
+            Scrape result dictionary
         """
-        result: dict[str, Any] = {
+        scrape_result: dict[str, Any] = {
             "success": False,
             "title": None,
             "files": [],
@@ -209,10 +209,10 @@ class InstagramScraper(BaseScraper):
             # Extract username from URL
             username = self._extract_username(url)
             if not username:
-                result["error"] = "Could not extract username from URL"
-                return result
+                scrape_result["error"] = "Could not extract username from URL"
+                return scrape_result
 
-            result["title"] = f"@{username}"
+            scrape_result["title"] = f"@{username}"
             self.update_progress(10, f"Loading profile: @{username}")
 
             loader = self._get_instaloader()
@@ -222,10 +222,10 @@ class InstagramScraper(BaseScraper):
             except Exception as e:
                 error_msg = str(e)
                 if "401" in error_msg or "404" in error_msg or "429" in error_msg:
-                    result["error"] = (
+                    scrape_result["error"] = (
                         f"Authentication error: {error_msg}. Try refreshing session cookies."
                     )
-                    return result
+                    return scrape_result
                 raise
 
             output_dir = self.download_dir / "instagram" / username
@@ -246,7 +246,7 @@ class InstagramScraper(BaseScraper):
                 "posts_count": profile.mediacount,
                 "url": url,
             }
-            result["metadata"] = profile_metadata
+            scrape_result["metadata"] = profile_metadata
 
             self.update_progress(15, "Downloading profile posts")
 
@@ -255,14 +255,14 @@ class InstagramScraper(BaseScraper):
             downloaded = 0
             failed = 0
 
-            for i, post in enumerate(posts):
+            for post_index, post in enumerate(posts):
                 try:
                     # Rate limiting
-                    if i > 0:
+                    if post_index > 0:
                         delay = random.uniform(self.min_delay, self.max_delay)
                         self.update_progress(
-                            int((i / total) * 90) + 10,
-                            f"Downloading post {i + 1}/{total} (waiting {delay:.1f}s)...",
+                            int((post_index / total) * 90) + 10,
+                            f"Downloading post {post_index + 1}/{total} (waiting {delay:.1f}s)...",
                         )
                         time.sleep(delay)
 
@@ -273,8 +273,8 @@ class InstagramScraper(BaseScraper):
                     post_dir.mkdir(exist_ok=True)
 
                     # Download media
-                    files = self._download_post_media(loader, post, post_dir, job_id)
-                    result["files"].extend(files)
+                    downloaded_files = self._download_post_media(loader, post, post_dir, job_id)
+                    scrape_result["files"].extend(downloaded_files)
 
                     # Save post metadata
                     post_metadata = self._extract_post_metadata(post)
@@ -310,14 +310,14 @@ class InstagramScraper(BaseScraper):
                     profile_metadata,
                 )
 
-            result["success"] = True
+            scrape_result["success"] = True
             self.update_progress(100, f"Downloaded {downloaded} posts ({failed} failed)")
 
         except Exception as e:
             logger.exception("Error scraping Instagram profile: %s", url)
-            result["error"] = str(e)
+            scrape_result["error"] = str(e)
 
-        return result
+        return scrape_result
 
     def _scrape_post(self, url: str, job_id: str) -> dict[str, Any]:
         """Scrape a single Instagram post/reel.
@@ -327,9 +327,9 @@ class InstagramScraper(BaseScraper):
             job_id: Job ID
 
         Returns:
-            Result dictionary
+            Scrape result dictionary
         """
-        result: dict[str, Any] = {
+        scrape_result: dict[str, Any] = {
             "success": False,
             "title": None,
             "files": [],
@@ -345,8 +345,8 @@ class InstagramScraper(BaseScraper):
             # Extract shortcode from URL
             shortcode = self._extract_shortcode(url)
             if not shortcode:
-                result["error"] = "Could not extract post shortcode from URL"
-                return result
+                scrape_result["error"] = "Could not extract post shortcode from URL"
+                return scrape_result
 
             post = instaloader.Post.from_shortcode(loader.context, shortcode)
 
@@ -358,13 +358,13 @@ class InstagramScraper(BaseScraper):
             post_dir = output_dir / f"{post.shortcode}_{post.date_utc.strftime('%Y%m%d_%H%M%S')}"
             post_dir.mkdir(exist_ok=True)
 
-            result["title"] = f"Post by @{username}"
+            scrape_result["title"] = f"Post by @{username}"
 
             self.update_progress(30, "Downloading media")
 
             # Download media
-            files = self._download_post_media(loader, post, post_dir, job_id)
-            result["files"].extend(files)
+            downloaded_files = self._download_post_media(loader, post, post_dir, job_id)
+            scrape_result["files"].extend(downloaded_files)
 
             self.update_progress(70, "Saving metadata")
 
@@ -382,16 +382,16 @@ class InstagramScraper(BaseScraper):
                     post_metadata,
                 )
 
-            result["metadata"] = post_metadata
-            result["success"] = True
+            scrape_result["metadata"] = post_metadata
+            scrape_result["success"] = True
 
             self.update_progress(100, "Complete")
 
         except Exception as e:
             logger.exception("Error scraping Instagram post: %s", url)
-            result["error"] = str(e)
+            scrape_result["error"] = str(e)
 
-        return result
+        return scrape_result
 
     def _download_post_media(
         self,
@@ -411,22 +411,22 @@ class InstagramScraper(BaseScraper):
         Returns:
             List of file info dicts
         """
-        files = []
+        downloaded_files = []
 
         try:
             if post.typename == "GraphSidecar":
                 # Carousel with multiple items
-                for i, sidecar_node in enumerate(post.get_sidecar_nodes()):
+                for carousel_index, sidecar_node in enumerate(post.get_sidecar_nodes()):
                     if sidecar_node.is_video:
                         url = sidecar_node.video_url
-                        ext = "mp4"
+                        file_extension = "mp4"
                         file_type = FILE_TYPE_VIDEO
                     else:
                         url = sidecar_node.display_url
-                        ext = "jpg"
+                        file_extension = "jpg"
                         file_type = FILE_TYPE_IMAGE
 
-                    filename = f"{i + 1}.{ext}"
+                    filename = f"{carousel_index + 1}.{file_extension}"
                     filepath = output_dir / filename
 
                     # Download file
@@ -441,7 +441,7 @@ class InstagramScraper(BaseScraper):
                             file_type,
                             filepath.stat().st_size,
                         )
-                        files.append(
+                        downloaded_files.append(
                             {
                                 "file_path": str(filepath.relative_to(self.download_dir)),
                                 "file_type": file_type,
@@ -468,7 +468,7 @@ class InstagramScraper(BaseScraper):
                         FILE_TYPE_VIDEO,
                         filepath.stat().st_size,
                     )
-                    files.append(
+                    downloaded_files.append(
                         {
                             "file_path": str(filepath.relative_to(self.download_dir)),
                             "file_type": FILE_TYPE_VIDEO,
@@ -495,7 +495,7 @@ class InstagramScraper(BaseScraper):
                         FILE_TYPE_IMAGE,
                         filepath.stat().st_size,
                     )
-                    files.append(
+                    downloaded_files.append(
                         {
                             "file_path": str(filepath.relative_to(self.download_dir)),
                             "file_type": FILE_TYPE_IMAGE,
@@ -506,7 +506,7 @@ class InstagramScraper(BaseScraper):
         except Exception as e:
             logger.error("Error downloading media for post %s: %s", post.shortcode, e)
 
-        return files
+        return downloaded_files
 
     def _extract_post_metadata(self, post: instaloader.Post) -> dict[str, Any]:
         """Extract metadata from a post.
@@ -566,9 +566,9 @@ class InstagramScraper(BaseScraper):
         # instagram.com/username
         # instagram.com/username/
         # www.instagram.com/username
-        parts = url.rstrip("/").split("/")
-        if len(parts) >= 1:
-            username = parts[-1]
+        url_segments = url.rstrip("/").split("/")
+        if len(url_segments) >= 1:
+            username = url_segments[-1]
             if username and not any(x in username for x in ["?", "=", ".", "instagram"]):
                 return username
         return None

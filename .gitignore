@@ -18,6 +18,7 @@ htmlcov/
 # Environment and secrets
 .env
 .env.*
+!.env.example
 *.key
 
 # App data

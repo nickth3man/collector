@@ -17,14 +17,52 @@ pages_bp = Blueprint("pages", __name__)
 
 @pages_bp.route("/")
 def index():
-    """Dashboard with URL input and active jobs."""
+    """Render the main dashboard page.
+
+    The dashboard provides URL input form for starting downloads
+    and displays active jobs with real-time status updates.
+
+    Returns:
+        HTML: Rendered dashboard page (dashboard.html) containing:
+            - URL input form with CSRF protection
+            - Active jobs list with HTMX polling
+            - Configuration status display
+    """
     return render_template("dashboard.html")
 
 
 @pages_bp.route("/browse")
 @pages_bp.route("/browse/<path:subpath>")
 def browse(subpath: str = ""):
-    """Browse downloaded content by platform/profile/content."""
+    """Browse downloaded content directory hierarchy.
+
+    Provides a filesystem-like browser for downloaded content, organized
+    by platform/profile/content. Supports directory traversal and file download.
+
+    Args:
+        subpath: Relative path from downloads root (optional, defaults to root)
+
+    Returns:
+        HTML: Rendered browse page (browse.html) with:
+            - current_path: Current subpath string
+            - current_path_parts: List of path components for breadcrumb navigation
+            - is_root: Boolean indicating if at root directory
+            - items: List of directory contents with name, is_dir, size, relative_path
+        OR file download response if path points to a file
+
+    Raises:
+        HTTPException: 403 if path traversal detected (PathSecurityError)
+        Redirects to self with flash error if path does not exist
+
+    Security:
+        Uses resolve_user_path() to prevent directory traversal attacks.
+        All paths are validated against the configured downloads directory.
+
+    Behavior:
+        - Directory: Lists contents with folders first, sorted alphabetically
+        - File: Initiates file download via safe_send_file()
+        - Invalid path: Returns to browse root with error message
+    """
     from flask import current_app
 
     download_dir = Path(current_app.config["SCRAPER_DOWNLOAD_DIR"])
@@ -64,10 +102,38 @@ def browse(subpath: str = ""):
 
 @pages_bp.route("/preview/<path:filepath>")
 def preview_file(filepath: str):
-    """Preview a file with inline display.
+    """Preview a downloaded file with inline display based on type.
+
+    Resolves the file path securely, detects the file type, and renders
+    an appropriate preview (image, video, audio, text, metadata).
 
     Args:
-        filepath: Relative path from downloads root
+        filepath: Relative path from downloads root (e.g., "instagram/user/photo.jpg")
+
+    Returns:
+        HTML: Rendered preview page (preview.html) with:
+            - file_path: Relative path to file
+            - file_name: Base filename
+            - file_type: Detected type (image, video, audio, transcript, text, metadata, unknown)
+            - content: File content for text-based types (None for binary)
+        OR redirect to browse page if path is a directory
+
+    Raises:
+        HTTPException: 403 if path traversal detected (PathSecurityError)
+        HTTPException: 404 if file does not exist
+
+    Security:
+        Uses resolve_user_path() to prevent directory traversal attacks.
+        All paths are validated against the configured downloads directory.
+
+    File Type Detection:
+        - Image: .jpg, .jpeg, .png, .gif, .webp
+        - Video: .mp4, .mov, .webm, .mkv
+        - Audio: .mp3, .m4a, .wav
+        - Transcript: .txt files with "transcript" in filename
+        - Text: Other .txt files
+        - Metadata: .json files
+        - Unknown: All other file types
     """
     from flask import current_app
 
@@ -127,7 +193,25 @@ def preview_file(filepath: str):
 
 @pages_bp.route("/history")
 def history():
-    """Download history with filters."""
+    """Display download history with optional filtering.
+
+    Shows a paginated list of past downloads with support for
+    filtering by platform and status.
+
+    Query Parameters:
+        platform: Optional filter by platform name (e.g., "instagram", "youtube")
+        status: Optional filter by job status (e.g., "completed", "failed")
+
+    Returns:
+        HTML: Rendered history page (history.html) with:
+            - jobs: List of Job objects (up to 200, filtered by parameters)
+            - filters: Dictionary of active filters {"platform": str|None, "status": str|None}
+
+    Behavior:
+        - Returns up to 200 most recent jobs
+        - Filters are applied cumulatively if both provided
+        - Jobs are ordered by creation date (newest first)
+    """
     platform = request.args.get("platform")
     status = request.args.get("status")
 

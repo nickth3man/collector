@@ -15,7 +15,27 @@ api_bp = Blueprint("api", __name__)
 
 @api_bp.route("/api/config/status")
 def config_status():
-    """Get configuration status for UI."""
+    """Get application configuration status for the frontend UI.
+
+    Retrieves encryption status and downloads directory location.
+    Includes fallback behavior to ensure UI always receives valid config.
+
+    Returns:
+        JSON: Response with structure:
+            {
+                "encryption_enabled": bool - Whether encryption is configured,
+                "downloads_dir": string - Absolute path to downloads directory
+            }
+
+    Error Handling:
+        If SessionService fails or throws exception, returns fallback config:
+            - encryption_enabled: false
+            - downloads_dir: Value from app config or empty string
+
+    Note:
+        This endpoint is called by the frontend to display configuration
+        status in the UI. The fallback ensures graceful degradation.
+    """
     try:
         session_service = SessionService()
         result = session_service.get_config_status()

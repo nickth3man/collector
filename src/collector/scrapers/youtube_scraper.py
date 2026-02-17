@@ -45,9 +45,9 @@ class YouTubeScraper(BaseScraper):
             job_id: Job ID for tracking
 
         Returns:
-            Result dictionary with success status, files, metadata
+            Scrape result dictionary with success status, files, metadata
         """
-        result: dict[str, Any] = {
+        scrape_result: dict[str, Any] = {
             "success": False,
             "title": None,
             "files": [],
@@ -66,8 +66,8 @@ class YouTubeScraper(BaseScraper):
 
         except Exception as e:
             logger.exception("Error scraping YouTube URL: %s", url)
-            result["error"] = str(e)
-            return result
+            scrape_result["error"] = str(e)
+            return scrape_result
 
     def _is_playlist_or_channel(self, url: str) -> bool:
         """Check if URL is a playlist or channel.
@@ -94,9 +94,9 @@ class YouTubeScraper(BaseScraper):
             job_id: Job ID
 
         Returns:
-            Result dictionary
+            Scrape result dictionary
         """
-        result: dict[str, Any] = {
+        scrape_result: dict[str, Any] = {
             "success": False,
             "title": None,
             "files": [],
@@ -133,12 +133,12 @@ class YouTubeScraper(BaseScraper):
                 info = ydl.extract_info(url, download=False)
 
                 if not info:
-                    result["error"] = "Could not extract video info"
-                    return result
+                    scrape_result["error"] = "Could not extract video info"
+                    return scrape_result
 
                 title = info.get("title", "Unknown Title")
                 _uploader = info.get("uploader", "Unknown Channel")
-                result["title"] = title
+                scrape_result["title"] = title
 
                 self.update_progress(20, f"Downloading: {title}")
 
@@ -151,7 +151,7 @@ class YouTubeScraper(BaseScraper):
 
                 # Get metadata
                 metadata = self._extract_metadata(info)
-                result["metadata"] = metadata
+                scrape_result["metadata"] = metadata
 
                 self.update_progress(70, "Saving metadata")
 
@@ -167,7 +167,7 @@ class YouTubeScraper(BaseScraper):
                         metadata_path.stat().st_size,
                         metadata,
                     )
-                    result["files"].append(
+                    scrape_result["files"].append(
                         {
                             "file_path": str(metadata_path.relative_to(self.download_dir)),
                             "file_type": FILE_TYPE_METADATA,
@@ -188,7 +188,7 @@ class YouTubeScraper(BaseScraper):
                             FILE_TYPE_TRANSCRIPT,
                             transcript_path.stat().st_size,
                         )
-                        result["files"].append(
+                        scrape_result["files"].append(
                             {
                                 "file_path": str(transcript_path.relative_to(self.download_dir)),
                                 "file_type": FILE_TYPE_TRANSCRIPT,
@@ -211,7 +211,7 @@ class YouTubeScraper(BaseScraper):
                         file_type,
                         video_file.stat().st_size,
                     )
-                    result["files"].append(
+                    scrape_result["files"].append(
                         {
                             "file_path": str(video_file.relative_to(self.download_dir)),
                             "file_type": file_type,
@@ -219,14 +219,14 @@ class YouTubeScraper(BaseScraper):
                         }
                     )
 
-                result["success"] = True
+                scrape_result["success"] = True
                 self.update_progress(100, "Complete")
 
         except Exception as e:
             logger.exception("Error downloading YouTube video: %s", url)
-            result["error"] = str(e)
+            scrape_result["error"] = str(e)
 
-        return result
+        return scrape_result
 
     def _scrape_playlist(self, url: str, job_id: str) -> dict[str, Any]:
         """Scrape a YouTube playlist or channel.
@@ -239,9 +239,9 @@ class YouTubeScraper(BaseScraper):
             job_id: Job ID
 
         Returns:
-            Result dictionary with all videos info
+            Scrape result dictionary with all videos info
         """
-        result: dict[str, Any] = {
+        scrape_result: dict[str, Any] = {
             "success": False,
             "title": None,
             "files": [],
@@ -263,16 +263,16 @@ class YouTubeScraper(BaseScraper):
                 info = ydl.extract_info(url, download=False)
 
                 if not info:
-                    result["error"] = "Could not extract playlist info"
-                    return result
+                    scrape_result["error"] = "Could not extract playlist info"
+                    return scrape_result
 
                 title = info.get("title", "Playlist")
-                result["title"] = f"Playlist: {title}"
+                scrape_result["title"] = f"Playlist: {title}"
 
                 entries = info.get("entries", [])
                 total = len(entries)
 
-                result["metadata"] = {
+                scrape_result["metadata"] = {
                     "type": "playlist",
                     "title": title,
                     "uploader": info.get("uploader"),
@@ -280,7 +280,7 @@ class YouTubeScraper(BaseScraper):
                     "videos": [],
                 }
 
-                for i, entry in enumerate(entries):
+                for video_index, entry in enumerate(entries):
                     if not entry:
                         continue
 
@@ -289,7 +289,7 @@ class YouTubeScraper(BaseScraper):
                     )
                     video_title = entry.get("title", "Unknown")
 
-                    result["metadata"]["videos"].append(
+                    scrape_result["metadata"]["videos"].append(
                         {
                             "id": entry.get("id"),
                             "title": video_title,
@@ -299,17 +299,17 @@ class YouTubeScraper(BaseScraper):
                         }
                     )
 
-                    progress = int((i + 1) / total * 100)
-                    self.update_progress(progress, f"Processing {i + 1}/{total}: {video_title}")
+                    progress = int((video_index + 1) / total * 100)
+                    self.update_progress(progress, f"Processing {video_index + 1}/{total}: {video_title}")
 
-                result["success"] = True
+                scrape_result["success"] = True
                 self.update_progress(100, f"Found {total} videos in playlist")
 
         except Exception as e:
             logger.exception("Error processing YouTube playlist: %s", url)
-            result["error"] = str(e)
+            scrape_result["error"] = str(e)
 
-        return result
+        return scrape_result
 
     def _fetch_transcript(self, video_id: str, output_dir: Path) -> Path | None:
         """Fetch and save transcript for a video.
@@ -377,45 +377,45 @@ class YouTubeScraper(BaseScraper):
 
         return "\n".join(lines)
 
-    def _extract_metadata(self, info: dict) -> dict[str, Any]:
+    def _extract_metadata(self, yt_dlp_info: dict) -> dict[str, Any]:
         """Extract relevant metadata from yt-dlp info dict.
 
         Args:
-            info: Info dict from yt-dlp
+            yt_dlp_info: Info dict from yt-dlp
 
         Returns:
             Cleaned metadata dictionary
         """
-        metadata = {
+        metadata_dict = {
             "platform": "youtube",
-            "id": info.get("id"),
-            "title": info.get("title"),
-            "description": info.get("description"),
-            "uploader": info.get("uploader"),
-            "uploader_id": info.get("uploader_id"),
-            "uploader_url": info.get("uploader_url"),
-            "channel": info.get("channel"),
-            "channel_id": info.get("channel_id"),
-            "channel_url": info.get("channel_url"),
-            "duration": info.get("duration"),
-            "view_count": info.get("view_count"),
-            "like_count": info.get("like_count"),
-            "upload_date": info.get("upload_date"),
-            "release_date": info.get("release_date"),
-            "availability": info.get("availability"),
-            "tags": info.get("tags"),
-            "categories": info.get("categories"),
-            "live_status": info.get("live_status"),
-            "playable_in_embed": info.get("playable_in_embed"),
-            "width": info.get("width"),
-            "height": info.get("height"),
-            "fps": info.get("fps"),
-            "format": info.get("format"),
-            "format_id": info.get("format_id"),
-            "ext": info.get("ext"),
-            "filesize": info.get("filesize"),
-            "url": info.get("webpage_url"),
+            "id": yt_dlp_info.get("id"),
+            "title": yt_dlp_info.get("title"),
+            "description": yt_dlp_info.get("description"),
+            "uploader": yt_dlp_info.get("uploader"),
+            "uploader_id": yt_dlp_info.get("uploader_id"),
+            "uploader_url": yt_dlp_info.get("uploader_url"),
+            "channel": yt_dlp_info.get("channel"),
+            "channel_id": yt_dlp_info.get("channel_id"),
+            "channel_url": yt_dlp_info.get("channel_url"),
+            "duration": yt_dlp_info.get("duration"),
+            "view_count": yt_dlp_info.get("view_count"),
+            "like_count": yt_dlp_info.get("like_count"),
+            "upload_date": yt_dlp_info.get("upload_date"),
+            "release_date": yt_dlp_info.get("release_date"),
+            "availability": yt_dlp_info.get("availability"),
+            "tags": yt_dlp_info.get("tags"),
+            "categories": yt_dlp_info.get("categories"),
+            "live_status": yt_dlp_info.get("live_status"),
+            "playable_in_embed": yt_dlp_info.get("playable_in_embed"),
+            "width": yt_dlp_info.get("width"),
+            "height": yt_dlp_info.get("height"),
+            "fps": yt_dlp_info.get("fps"),
+            "format": yt_dlp_info.get("format"),
+            "format_id": yt_dlp_info.get("format_id"),
+            "ext": yt_dlp_info.get("ext"),
+            "filesize": yt_dlp_info.get("filesize"),
+            "url": yt_dlp_info.get("webpage_url"),
         }
 
         # Remove None values
-        return {k: v for k, v in metadata.items() if v is not None}
+        return {k: v for k, v in metadata_dict.items() if v is not None}
