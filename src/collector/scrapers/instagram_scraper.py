@@ -199,7 +199,9 @@ class InstagramScraper(BaseScraper):
 
                         # Load session with Instaloader using the actual username
                         loader.load_session_from_file(username, str(tmp_path))
-                        logger.info("Loaded encrypted Instagram session from file for user %s", username)
+                        logger.info(
+                            "Loaded encrypted Instagram session from file for user %s", username
+                        )
 
                         # Clean up temp file
                         tmp_path.unlink()

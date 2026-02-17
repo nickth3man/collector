@@ -273,7 +273,9 @@ def get_db() -> sqlite3.Connection:
         RuntimeError: If called outside of an application context.
     """
     if "db" not in g:
-        db_path = current_app.config.get("SCRAPER_DB_PATH") or current_app.config.get("DATABASE_PATH")
+        db_path = current_app.config.get("SCRAPER_DB_PATH") or current_app.config.get(
+            "DATABASE_PATH"
+        )
         if not db_path:
             raise RuntimeError("No database path configured (SCRAPER_DB_PATH or DATABASE_PATH)")
         g.db = sqlite3.connect(db_path, detect_types=sqlite3.PARSE_DECLTYPES)

@@ -51,7 +51,8 @@ jobs:
           from src.collector.config.settings import Config, get_config
           config = get_config()
           assert config.SECRET_KEY == 'test-key'
-          assert str(config.SCRAPER_DOWNLOAD_DIR) == './downloads'
+          # Check that download dir ends with 'downloads' (works for both relative and absolute paths)
+          assert config.SCRAPER_DOWNLOAD_DIR.name == 'downloads' or str(config.SCRAPER_DOWNLOAD_DIR).endswith('downloads')
           assert config.SCRAPER_MAX_CONCURRENT == 2
           print('Config instantiation: OK')
           print(f'Download dir: {config.SCRAPER_DOWNLOAD_DIR}')
