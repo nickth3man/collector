@@ -1,0 +1,53 @@
+name: Lint
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: ['**']
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: Install uv package manager
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install dependencies
+        run: |
+          uv sync --group dev
+
+      - name: Check code formatting with Black
+        run: |
+          uv run black --check src tests
+
+      - name: Lint with Ruff
+        run: |
+          uv run ruff check src tests
+
+      - name: Type check with mypy
+        run: |
+          uv run mypy src/collector/config \
+                      src/collector/models \
+                      src/collector/repositories \
+                      src/collector/scrapers \
+                      src/collector/services \
+                      --ignore-missing-imports
+        continue-on-error: true  # Don't fail the workflow initially
+
+      - name: Type check routes (optional)
+        run: |
+          uv run mypy src/collector/routes --ignore-missing-imports
+        continue-on-error: true  # Known Flask type issues

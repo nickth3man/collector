@@ -1,0 +1,60 @@
+name: Tests
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: Install uv package manager
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install dependencies
+        run: |
+          uv sync --group dev
+
+      - name: Run tests with coverage
+        run: |
+          uv run pytest --cov=src --cov-report=xml --cov-report=term-missing
+
+      - name: Check coverage threshold
+        run: |
+          uv run python -c "
+          import xml.etree.ElementTree as ET
+          tree = ET.parse('coverage.xml')
+          coverage = float(tree.getroot().attrib.get('line-rate', '0'))
+          print(f'Coverage: {coverage*100:.1f}%')
+          if coverage < 0.80:
+            raise SystemExit(f'Coverage {coverage*100:.1f}% is below 80% threshold')
+          "
+
+      - name: Upload coverage to artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.xml
+          retention-days: 30
+
+      - name: Upload coverage to Codecov
+        if: github.event_name == 'push'
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.xml
+          fail_ci_if_error: false
