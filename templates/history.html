@@ -76,6 +76,7 @@
                                     hx-target="closest tr"
                                     hx-swap="outerHTML"
                                 >
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                                     <button type="submit" style="font-size: 0.875rem;">Retry</button>
                                 </form>
                             {% endif %}
@@ -90,6 +91,7 @@
                                     hx-swap="outerHTML"
                                     hx-confirm="Are you sure you want to delete this job and its files?"
                                 >
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                                     <input type="hidden" name="_method" value="DELETE">
                                     <button type="submit" style="font-size: 0.875rem; color: #ef4444;">Delete</button>
                                 </form>

@@ -117,8 +117,13 @@ Instagram scraping works best with authenticated sessions. Instead of passwords,
 ```
 collector/
 ├── app.py                      # Flask entry point, routes, job management
+├── app_factory.py              # Application factory pattern
+├── executor_adapter.py         # Task execution abstraction
 ├── config.py                   # Configuration with environment variable support
 ├── pyproject.toml              # uv project configuration
+├── security/
+│   ├── csrf.py                 # CSRF token generation/validation
+│   └── paths.py                # Path traversal protection
 ├── scrapers/
 │   ├── base_scraper.py         # Abstract base class
 │   ├── youtube_scraper.py      # yt-dlp + transcript integration
@@ -129,13 +134,23 @@ collector/
 │   ├── browse.html             # File browser
 │   ├── history.html            # Download history table
 │   └── partials/               # HTMX fragments
-├── static/                     # HTMX and Pico CSS
+├── static/
+│   └── vendor/                 # Local fallback assets (Pico CSS, HTMX)
 ├── downloads/                  # Downloaded content
 │   ├── youtube/
 │   └── instagram/
 ├── tests/
 └── scraper.db                  # SQLite database
 ```
+
+### Static Asset Policy
+
+Frontend assets (Pico CSS, HTMX) use **CDN-first with local fallback**:
+
+1. Primary: Load from CDN for performance and caching
+2. Fallback: If CDN fails, automatically load from `static/vendor/`
+
+This ensures the app works offline and degrades gracefully when CDNs are unavailable.
 
 ## Configuration
 

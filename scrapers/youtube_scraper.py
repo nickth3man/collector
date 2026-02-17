@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import logging
 import re
 from pathlib import Path
@@ -109,7 +108,9 @@ class YouTubeScraper(BaseScraper):
             self.update_progress(5, "Extracting video info")
 
             # Configure yt-dlp options
-            quality_format = f"bestvideo[height<={self.quality}]+bestaudio/best[height<={self.quality}]/best"
+            quality_format = (
+                f"bestvideo[height<={self.quality}]+bestaudio/best[height<={self.quality}]/best"
+            )
             if self.quality == "audio":
                 quality_format = "bestaudio/best"
 
@@ -136,7 +137,7 @@ class YouTubeScraper(BaseScraper):
                     return result
 
                 title = info.get("title", "Unknown Title")
-                uploader = info.get("uploader", "Unknown Channel")
+                _uploader = info.get("uploader", "Unknown Channel")
                 result["title"] = title
 
                 self.update_progress(20, f"Downloading: {title}")
@@ -166,11 +167,13 @@ class YouTubeScraper(BaseScraper):
                         metadata_path.stat().st_size,
                         metadata,
                     )
-                    result["files"].append({
-                        "file_path": str(metadata_path.relative_to(self.download_dir)),
-                        "file_type": FILE_TYPE_METADATA,
-                        "file_size": metadata_path.stat().st_size,
-                    })
+                    result["files"].append(
+                        {
+                            "file_path": str(metadata_path.relative_to(self.download_dir)),
+                            "file_type": FILE_TYPE_METADATA,
+                            "file_size": metadata_path.stat().st_size,
+                        }
+                    )
 
                 self.update_progress(80, "Fetching transcript")
 
@@ -185,28 +188,36 @@ class YouTubeScraper(BaseScraper):
                             FILE_TYPE_TRANSCRIPT,
                             transcript_path.stat().st_size,
                         )
-                        result["files"].append({
-                            "file_path": str(transcript_path.relative_to(self.download_dir)),
-                            "file_type": FILE_TYPE_TRANSCRIPT,
-                            "file_size": transcript_path.stat().st_size,
-                        })
+                        result["files"].append(
+                            {
+                                "file_path": str(transcript_path.relative_to(self.download_dir)),
+                                "file_type": FILE_TYPE_TRANSCRIPT,
+                                "file_size": transcript_path.stat().st_size,
+                            }
+                        )
 
                 self.update_progress(90, "Finalizing")
 
                 # Record video file
                 if video_file.exists():
-                    file_type = FILE_TYPE_VIDEO if video_file.suffix not in [".m4a", ".mp3"] else FILE_TYPE_AUDIO
+                    file_type = (
+                        FILE_TYPE_VIDEO
+                        if video_file.suffix not in [".m4a", ".mp3"]
+                        else FILE_TYPE_AUDIO
+                    )
                     self.save_file_record(
                         job_id,
                         str(video_file.relative_to(self.download_dir)),
                         file_type,
                         video_file.stat().st_size,
                     )
-                    result["files"].append({
-                        "file_path": str(video_file.relative_to(self.download_dir)),
-                        "file_type": file_type,
-                        "file_size": video_file.stat().st_size,
-                    })
+                    result["files"].append(
+                        {
+                            "file_path": str(video_file.relative_to(self.download_dir)),
+                            "file_type": file_type,
+                            "file_size": video_file.stat().st_size,
+                        }
+                    )
 
                 result["success"] = True
                 self.update_progress(100, "Complete")
@@ -273,16 +284,20 @@ class YouTubeScraper(BaseScraper):
                     if not entry:
                         continue
 
-                    video_url = entry.get("url") or f"https://www.youtube.com/watch?v={entry.get('id')}"
+                    video_url = (
+                        entry.get("url") or f"https://www.youtube.com/watch?v={entry.get('id')}"
+                    )
                     video_title = entry.get("title", "Unknown")
 
-                    result["metadata"]["videos"].append({
-                        "id": entry.get("id"),
-                        "title": video_title,
-                        "url": video_url,
-                        "duration": entry.get("duration"),
-                        "view_count": entry.get("view_count"),
-                    })
+                    result["metadata"]["videos"].append(
+                        {
+                            "id": entry.get("id"),
+                            "title": video_title,
+                            "url": video_url,
+                            "duration": entry.get("duration"),
+                            "view_count": entry.get("view_count"),
+                        }
+                    )
 
                     progress = int((i + 1) / total * 100)
                     self.update_progress(progress, f"Processing {i + 1}/{total}: {video_title}")
@@ -351,7 +366,7 @@ class YouTubeScraper(BaseScraper):
         for entry in transcript:
             text = entry.get("text", "")
             start = entry.get("start", 0)
-            duration = entry.get("duration", 0)
+            _duration = entry.get("duration", 0)
 
             # Format timestamp as MM:SS
             minutes = int(start // 60)

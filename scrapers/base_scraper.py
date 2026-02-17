@@ -11,8 +11,6 @@ import unicodedata
 from pathlib import Path
 from typing import Any, Callable
 
-from config import Config
-
 
 class BaseScraper(abc.ABC):
     """Abstract base class for platform-specific scrapers."""
@@ -87,9 +85,28 @@ class BaseScraper(abc.ABC):
 
         # Avoid Windows reserved names
         reserved_names = {
-            "CON", "PRN", "AUX", "NUL",
-            "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
-            "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9",
+            "CON",
+            "PRN",
+            "AUX",
+            "NUL",
+            "COM1",
+            "COM2",
+            "COM3",
+            "COM4",
+            "COM5",
+            "COM6",
+            "COM7",
+            "COM8",
+            "COM9",
+            "LPT1",
+            "LPT2",
+            "LPT3",
+            "LPT4",
+            "LPT5",
+            "LPT6",
+            "LPT7",
+            "LPT8",
+            "LPT9",
         }
         base_name = os.path.splitext(name)[0].upper()
         if base_name in reserved_names:
@@ -99,7 +116,7 @@ class BaseScraper(abc.ABC):
         if len(name) > max_length:
             # Try to preserve extension
             base, ext = os.path.splitext(name)
-            name = base[:max_length - len(ext)] + ext
+            name = base[: max_length - len(ext)] + ext
 
         # Fallback if empty
         if not name:
@@ -160,9 +177,15 @@ class BaseScraper(abc.ABC):
             cursor.execute(
                 """
                 INSERT INTO files (job_id, file_path, file_type, file_size, metadata_json, created_at)
-                VALUES (?, ?, ?, ?, ?, datetime('utc'))
+                VALUES (?, ?, ?, ?, ?, datetime('now'))
                 """,
-                (job_id, file_path, file_type, file_size, json.dumps(metadata) if metadata else None),
+                (
+                    job_id,
+                    file_path,
+                    file_type,
+                    file_size,
+                    json.dumps(metadata) if metadata else None,
+                ),
             )
             conn.commit()
             return cursor.lastrowid

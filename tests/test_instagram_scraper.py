@@ -1,7 +1,6 @@
 """Tests for Instagram scraper."""
 
 import pytest
-from pathlib import Path
 from scrapers.instagram_scraper import InstagramScraper
 
 

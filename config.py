@@ -6,36 +6,27 @@ All settings are managed through environment variables with sensible defaults.
 
 import os
 from pathlib import Path
-from typing import cast
 
 
 class Config:
     """Centralized configuration with environment variable support."""
 
     # Paths
-    SCRAPER_DOWNLOAD_DIR: Path = Path(
-        os.environ.get("SCRAPER_DOWNLOAD_DIR", "./downloads")
-    )
+    SCRAPER_DOWNLOAD_DIR: Path = Path(os.environ.get("SCRAPER_DOWNLOAD_DIR", "./downloads"))
     SCRAPER_DB_PATH: Path = Path(os.environ.get("SCRAPER_DB_PATH", "./scraper.db"))
 
     # Concurrency
-    SCRAPER_MAX_CONCURRENT: int = int(
-        os.environ.get("SCRAPER_MAX_CONCURRENT", "2")
-    )
+    SCRAPER_MAX_CONCURRENT: int = int(os.environ.get("SCRAPER_MAX_CONCURRENT", "2"))
 
     # Instagram rate limiting
-    SCRAPER_IG_DELAY_MIN: float = float(
-        os.environ.get("SCRAPER_IG_DELAY_MIN", "5.0")
-    )
-    SCRAPER_IG_DELAY_MAX: float = float(
-        os.environ.get("SCRAPER_IG_DELAY_MAX", "10.0")
-    )
+    SCRAPER_IG_DELAY_MIN: float = float(os.environ.get("SCRAPER_IG_DELAY_MIN", "5.0"))
+    SCRAPER_IG_DELAY_MAX: float = float(os.environ.get("SCRAPER_IG_DELAY_MAX", "10.0"))
 
     # Disk space warnings (in MB)
     SCRAPER_DISK_WARN_MB: int = int(os.environ.get("SCRAPER_DISK_WARN_MB", "1024"))
 
     # Security - Flask
-    FLASK_SECRET_KEY: str = os.environ.get("FLASK_SECRET_KEY", "dev-secret-key-change-in-production")
+    SECRET_KEY: str = os.environ.get("FLASK_SECRET_KEY", "dev-secret-key-change-in-production")
 
     # Security - Session encryption
     SCRAPER_SESSION_KEY: str | None = os.environ.get("SCRAPER_SESSION_KEY")
@@ -64,7 +55,7 @@ class Config:
         errors: list[str] = []
 
         # Validate required settings
-        if not cls.FLASK_SECRET_KEY or cls.FLASK_SECRET_KEY == "dev-secret-key-change-in-production":
+        if not cls.SECRET_KEY or cls.SECRET_KEY == "dev-secret-key-change-in-production":
             if not cls.DEBUG:
                 errors.append("FLASK_SECRET_KEY must be set in production")
 

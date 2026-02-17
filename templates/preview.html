@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block title %}{{ file_name }} - Preview{% endblock %}
+
+{% block content %}
+<h1>File Preview</h1>
+
+<div class="breadcrumb">
+    <a href="{{ url_for('browse') }}">🏠 Root</a>
+    {% set parts = file_path.split('/') %}
+    {% for part in parts[:-1] %}
+        <span>/</span>
+        <a href="{{ url_for('browse', subpath='/'.join(parts[:loop.index]) | default='') }}">{{ part }}</a>
+    {% endfor %}
+    {% if parts %}
+        <span>/</span>
+        <span>{{ parts[-1] }}</span>
+    {% endif %}
+</div>
+
+<article class="job-card">
+    <div class="job-header">
+        <h3 class="job-title">{{ file_name }}</h3>
+        <div class="job-meta">
+            <span class="badge" style="background: var(--pico-muted-color);">
+                {{ file_type.upper() }}
+            </span>
+        </div>
+    </div>
+
+    {% if file_type == 'image' %}
+    <div style="text-align: center; padding: 2rem;">
+        <img
+            src="{{ url_for('browse', subpath=file_path) }}"
+            alt="{{ file_name }}"
+            style="max-width: 100%; max-height: 80vh; border-radius: 8px;"
+        >
+    </div>
+    {% endif %}
+
+    {% if file_type == 'video' %}
+    <div style="text-align: center; padding: 2rem;">
+        <video
+            controls
+            style="max-width: 100%; max-height: 80vh; border-radius: 8px;"
+            preload="metadata"
+        >
+            <source src="{{ url_for('browse', subpath=file_path) }}" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+    {% endif %}
+
+    {% if file_type == 'transcript' %}
+    <div style="padding: 2rem;">
+        <h3>Transcript</h3>
+        {% if content %}
+        <pre
+            style="background: var(--pico-card-background-color);
+                   border: 1px solid var(--pico-border-color);
+                   border-radius: 8px;
+                   padding: 1.5rem;
+                   overflow-x: auto;
+                   font-size: 0.9375rem;
+                   line-height: 1.6;
+                   white-space: pre-wrap;
+                   word-wrap: break-word;"
+        >{{ content }}</pre>
+        {% else %}
+        <p style="color: var(--pico-muted-color);">No transcript content available.</p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if file_type == 'metadata' %}
+    <div style="padding: 2rem;">
+        <h3>Metadata</h3>
+        {% if content %}
+        <pre
+            id="json-viewer"
+            style="background: var(--pico-card-background-color);
+                   border: 1px solid var(--pico-border-color);
+                   border-radius: 8px;
+                   padding: 1.5rem;
+                   overflow: auto;
+                   font-size: 0.875rem;"
+        >{{ content }}</pre>
+        {% else %}
+        <p style="color: var(--pico-muted-color);">No metadata available.</p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if file_type == 'text' %}
+    <div style="padding: 2rem;">
+        <h3>Text Content</h3>
+        {% if content %}
+        <pre
+            style="background: var(--pico-card-background-color);
+                   border: 1px solid var(--pico-border-color);
+                   border-radius: 8px;
+                   padding: 1.5rem;
+                   overflow-x: auto;
+                   white-space: pre-wrap;
+                   word-wrap: break-word;"
+        >{{ content }}</pre>
+        {% else %}
+        <p style="color: var(--pico-muted-color);">No text content available.</p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if file_type == 'audio' %}
+    <div style="text-align: center; padding: 2rem;">
+        <audio
+            controls
+            style="max-width: 100%;"
+        >
+            <source src="{{ url_for('browse', subpath=file_path) }}">
+            Your browser does not support the audio element.
+        </audio>
+    </div>
+    {% endif %}
+
+    {% if file_type == 'unknown' %}
+    <div style="padding: 2rem; text-align: center;">
+        <div style="font-size: 4rem; margin-bottom: 1rem; opacity: 0.5;">📄</div>
+        <p style="color: var(--pico-muted-color);">
+            Preview not available for this file type.
+        </p>
+        <a href="{{ url_for('browse', subpath=file_path) }}" class="button">Download File</a>
+    </div>
+    {% endif %}
+
+    <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--pico-border-color);">
+        <a href="{{ url_for('browse', subpath='/'.join(file_path.split('/')[:-1]) | default='') }}" class="button">← Back to Directory</a>
+        <a href="{{ url_for('browse', subpath=file_path) }}" class="button" download>Download File</a>
+    </div>
+</article>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Simple JSON syntax highlighting
+    document.addEventListener('DOMContentLoaded', () => {
+        const jsonViewer = document.getElementById('json-viewer');
+        if (jsonViewer) {
+            try {
+                const jsonData = JSON.parse(jsonViewer.textContent);
+                jsonViewer.innerHTML = syntaxHighlight(jsonData);
+            } catch (e) {
+                // Not valid JSON, keep original content
+            }
+        }
+    });
+
+    function syntaxHighlight(json) {
+        if (typeof json !== 'string') {
+            json = JSON.stringify(json, undefined, 2);
+        }
+        json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return json.replace(/("(\\u[0-9a-f]{4})/g, (match) => {
+            let char = String.fromCharCode('0x' + match.slice(1, -1));
+            if (char === '"') {
+                char = '&quot;';
+            } else if (char === '&') {
+                char = '&amp;';
+            } else if (char === '<') {
+                char = '&lt;';
+            } else if (char === '>') {
+                char = '&gt;';
+            }
+            return '<span style="color: #005cc5;">' + char + '</span>';
+        }).replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+    }
+</script>
+{% endblock %}

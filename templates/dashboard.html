@@ -7,6 +7,7 @@
 
 <div class="url-input-group">
     <form hx-post="{{ url_for('download') }}" hx-target="#active-jobs" hx-swap="beforeend" class="url-input-group" style="width: 100%">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <input
             type="url"
             name="url"
@@ -72,9 +73,9 @@
         <li>View your download history in the <a href="{{ url_for('history') }}">History</a> section</li>
     </ol>
 
-    {% if not config.FLASK_SECRET_KEY or config.FLASK_SECRET_KEY == 'dev-secret-key-change-in-production' %}
+    {% if not config.SECRET_KEY or config.SECRET_KEY == 'dev-secret-key-change-in-production' %}
     <div class="notification error" style="margin-top: 1rem;">
-        <strong>Warning:</strong> Running with default FLASK_SECRET_KEY. Set a proper secret key in production.
+        <strong>Warning:</strong> Running with default SECRET_KEY. Set a proper secret key in production.
     </div>
     {% endif %}
 </article>

@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import logging
 import random
+import tempfile
 import time
 from pathlib import Path
 from typing import Any
@@ -100,7 +101,7 @@ class InstagramScraper(BaseScraper):
         Returns:
             Configured Instaloader instance
         """
-        L = instaloader.Instaloader(
+        loader = instaloader.Instaloader(
             download_videos=True,
             download_video_thumbnails=False,
             download_geotags=False,
@@ -114,14 +115,74 @@ class InstagramScraper(BaseScraper):
         # Load session if available
         if self.session_file and self.session_file.exists():
             try:
-                # Session file loading would be implemented with decryption
-                # For now, we'll implement basic file loading
-                L.load_session_from_file("throwaway_user", str(self.session_file))
-                logger.info("Loaded Instagram session from file")
+                # The session file is encrypted from our session_manager
+                # We need to decrypt it first before passing to Instaloader
+                # But Instaloader expects a specific format, so we decrypt to a temp file
+                from cryptography.fernet import Fernet, InvalidToken
+
+                # Read encrypted session
+                with open(self.session_file, "rb") as f:
+                    encrypted_data = f.read()
+
+                # Try to decrypt using the session manager's approach
+                # We'll need the encryption key - check env var
+                import os
+
+                key_str = os.environ.get("SCRAPER_SESSION_KEY")
+                if key_str:
+                    from cryptography.hazmat.primitives import hashes
+                    from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+                    import base64
+
+                    # Derive proper Fernet key
+                    key_bytes = key_str.encode()
+                    if len(key_str.split(".")) < 2:
+                        # Not a proper Fernet key, derive one
+                        kdf = PBKDF2HMAC(
+                            algorithm=hashes.SHA256(),
+                            length=32,
+                            salt=b"instagram_scraper",
+                            iterations=100000,
+                        )
+                        key_bytes = kdf.derive(key_bytes)
+                    else:
+                        key_bytes = key_str.encode()
+
+                    cipher = Fernet(
+                        base64.urlsafe_b64encode(key_bytes)
+                        if len(key_str.split(".")) < 2
+                        else key_str
+                    )
+
+                    try:
+                        decrypted_json = cipher.decrypt(encrypted_data)
+                        session_data = json.loads(decrypted_json)
+
+                        # Create a temporary session file in Instaloader's format
+                        # Instaloader expects: username -> session file with cookies
+                        with tempfile.NamedTemporaryFile(
+                            mode="w", delete=False, suffix=".json"
+                        ) as tmp:
+                            tmp.write(json.dumps(session_data.get("cookies", {})))
+                            tmp_path = Path(tmp.name)
+
+                        # Load session with Instaloader
+                        loader.load_session_from_file("instagram_user", str(tmp_path))
+                        logger.info("Loaded encrypted Instagram session from file")
+
+                        # Clean up temp file
+                        tmp_path.unlink()
+                    except InvalidToken:
+                        logger.warning("Could not decrypt session file (wrong key?)")
+                    except Exception as e:
+                        logger.warning("Error processing session file: %s", e)
+                else:
+                    logger.warning("No SCRAPER_SESSION_KEY set, cannot load encrypted session")
+
             except Exception as e:
                 logger.warning("Could not load session file: %s", e)
 
-        return L
+        return loader
 
     def _scrape_profile(self, url: str, job_id: str) -> dict[str, Any]:
         """Scrape all posts from an Instagram profile.
@@ -153,14 +214,16 @@ class InstagramScraper(BaseScraper):
             result["title"] = f"@{username}"
             self.update_progress(10, f"Loading profile: @{username}")
 
-            L = self._get_instaloader()
+            loader = self._get_instaloader()
 
             try:
-                profile = instaloader.Profile.from_username(L.context, username)
+                profile = instaloader.Profile.from_username(loader.context, username)
             except Exception as e:
                 error_msg = str(e)
                 if "401" in error_msg or "404" in error_msg or "429" in error_msg:
-                    result["error"] = f"Authentication error: {error_msg}. Try refreshing session cookies."
+                    result["error"] = (
+                        f"Authentication error: {error_msg}. Try refreshing session cookies."
+                    )
                     return result
                 raise
 
@@ -203,11 +266,13 @@ class InstagramScraper(BaseScraper):
                         time.sleep(delay)
 
                     # Download post
-                    post_dir = output_dir / f"{post.shortcode}_{post.date_utc.strftime('%Y%m%d_%H%M%S')}"
+                    post_dir = (
+                        output_dir / f"{post.shortcode}_{post.date_utc.strftime('%Y%m%d_%H%M%S')}"
+                    )
                     post_dir.mkdir(exist_ok=True)
 
                     # Download media
-                    files = self._download_post_media(L, post, post_dir, job_id)
+                    files = self._download_post_media(loader, post, post_dir, job_id)
                     result["files"].extend(files)
 
                     # Save post metadata
@@ -274,7 +339,7 @@ class InstagramScraper(BaseScraper):
         try:
             self.update_progress(10, "Fetching post info")
 
-            L = self._get_instaloader()
+            loader = self._get_instaloader()
 
             # Extract shortcode from URL
             shortcode = self._extract_shortcode(url)
@@ -282,7 +347,7 @@ class InstagramScraper(BaseScraper):
                 result["error"] = "Could not extract post shortcode from URL"
                 return result
 
-            post = instaloader.Post.from_shortcode(L.context, shortcode)
+            post = instaloader.Post.from_shortcode(loader.context, shortcode)
 
             # Get username for directory
             username = post.owner_username
@@ -297,7 +362,7 @@ class InstagramScraper(BaseScraper):
             self.update_progress(30, "Downloading media")
 
             # Download media
-            files = self._download_post_media(L, post, post_dir, job_id)
+            files = self._download_post_media(loader, post, post_dir, job_id)
             result["files"].extend(files)
 
             self.update_progress(70, "Saving metadata")
@@ -329,7 +394,7 @@ class InstagramScraper(BaseScraper):
 
     def _download_post_media(
         self,
-        L: instaloader.Instaloader,
+        loader: instaloader.Instaloader,
         post: instaloader.Post,
         output_dir: Path,
         job_id: str,
@@ -337,7 +402,7 @@ class InstagramScraper(BaseScraper):
         """Download media files from a post.
 
         Args:
-            L: Instaloader instance
+            loader: Instaloader instance
             post: Post object
             output_dir: Directory to save files
             job_id: Job ID
@@ -364,7 +429,9 @@ class InstagramScraper(BaseScraper):
                     filepath = output_dir / filename
 
                     # Download file
-                    L.context.download_pic(filename=str(filepath), url=url, mtime=post.date_local.timestamp())
+                    L.context.download_pic(
+                        filename=str(filepath), url=url, mtime=post.date_local.timestamp()
+                    )
 
                     if filepath.exists():
                         self.save_file_record(
@@ -373,16 +440,18 @@ class InstagramScraper(BaseScraper):
                             file_type,
                             filepath.stat().st_size,
                         )
-                        files.append({
-                            "file_path": str(filepath.relative_to(self.download_dir)),
-                            "file_type": file_type,
-                            "file_size": filepath.stat().st_size,
-                        })
+                        files.append(
+                            {
+                                "file_path": str(filepath.relative_to(self.download_dir)),
+                                "file_type": file_type,
+                                "file_size": filepath.stat().st_size,
+                            }
+                        )
 
             elif post.is_video:
                 # Single video
                 filepath = output_dir / f"video.{post.url.split('.')[-1].split('?')[0]}"
-                L.download_post(post, target=str(output_dir))
+                loader.download_post(post, target=str(output_dir))
 
                 # Find the downloaded video file
                 for ext in ["mp4", "mov"]:
@@ -398,16 +467,18 @@ class InstagramScraper(BaseScraper):
                         FILE_TYPE_VIDEO,
                         filepath.stat().st_size,
                     )
-                    files.append({
-                        "file_path": str(filepath.relative_to(self.download_dir)),
-                        "file_type": FILE_TYPE_VIDEO,
-                        "file_size": filepath.stat().st_size,
-                    })
+                    files.append(
+                        {
+                            "file_path": str(filepath.relative_to(self.download_dir)),
+                            "file_type": FILE_TYPE_VIDEO,
+                            "file_size": filepath.stat().st_size,
+                        }
+                    )
 
             else:
                 # Single image
-                filepath = output_dir / f"photo.jpg"
-                L.download_post(post, target=str(output_dir))
+                filepath = output_dir / "photo.jpg"
+                loader.download_post(post, target=str(output_dir))
 
                 # Find the downloaded image file
                 for ext in ["jpg", "webp", "png"]:
@@ -423,11 +494,13 @@ class InstagramScraper(BaseScraper):
                         FILE_TYPE_IMAGE,
                         filepath.stat().st_size,
                     )
-                    files.append({
-                        "file_path": str(filepath.relative_to(self.download_dir)),
-                        "file_type": FILE_TYPE_IMAGE,
-                        "file_size": filepath.stat().st_size,
-                    })
+                    files.append(
+                        {
+                            "file_path": str(filepath.relative_to(self.download_dir)),
+                            "file_type": FILE_TYPE_IMAGE,
+                            "file_size": filepath.stat().st_size,
+                        }
+                    )
 
         except Exception as e:
             logger.error("Error downloading media for post %s: %s", post.shortcode, e)
@@ -511,6 +584,7 @@ class InstagramScraper(BaseScraper):
         # instagram.com/p/shortcode/
         # instagram.com/reel/shortcode/
         import re
+
         match = re.search(r"/(p|reel)/([^/?]+)", url)
         if match:
             return match.group(2)

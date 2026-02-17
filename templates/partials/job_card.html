@@ -34,6 +34,7 @@
                     hx-target="closest .job-card"
                     hx-swap="outerHTML"
                 >
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                     <button type="submit" class="secondary">Cancel</button>
                 </form>
             {% endif %}
@@ -46,6 +47,7 @@
                     hx-target="closest .job-card"
                     hx-swap="outerHTML"
                 >
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                     <button type="submit">Retry</button>
                 </form>
             {% endif %}
@@ -88,7 +90,7 @@
                             {{ file.file_path.split('/')[-1] }}
                         </a>
                         <span style="color: var(--pico-muted-color);">
-                            ({{ "{:,.0f}".format(file.size) if file.size else '0' }} bytes)
+                            ({{ "{:,.0f}".format(file.file_size) if file.file_size else '0' }} bytes)
                         </span>
                     </li>
                 {% endfor %}

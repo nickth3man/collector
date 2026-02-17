@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() if csrf_token else '' }}">
+    <meta name="csrf-token" content="{{ csrf_token }}">
     <title>{% block title %}Content Collector{% endblock %}</title>
 
-    <!-- Pico CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <!-- Pico CSS with local fallback -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" onerror="this.onerror=null;this.href='{{ url_for('static', filename='vendor/pico.min.css') }}'">
 
-    <!-- HTMX -->
-    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <!-- HTMX with local fallback -->
+    <script src="https://unpkg.com/htmx.org@1.9.10" onerror="this.onerror=null;this.src='{{ url_for('static', filename='vendor/htmx.min.js') }}'"></script>
 
     <style>
         /* Custom styles for dark mode toggle */
@@ -362,6 +362,7 @@
                 <a href="/" {% if request.endpoint == 'index' %}class="active"{% endif %}>Dashboard</a>
                 <a href="{{ url_for('browse') }}" {% if request.endpoint == 'browse' %}class="active"{% endif %}>Browse</a>
                 <a href="{{ url_for('history') }}" {% if request.endpoint == 'history' %}class="active"{% endif %}>History</a>
+                <a href="{{ url_for('list_sessions') }}" {% if request.endpoint == 'list_sessions' %}class="active"{% endif %}>Sessions</a>
                 <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
                     <span id="themeIcon">🌙</span>
                 </button>

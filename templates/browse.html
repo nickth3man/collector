@@ -24,7 +24,8 @@
                     hx-get="{{ url_for('browse', subpath=item.relative_path) }}"
                     hx-push-url="true"
                 {% else %}
-                    onclick="window.open('{{ url_for('browse', subpath=item.relative_path) }}', '_blank')"
+                    hx-get="{{ url_for('preview_file', filepath=item.relative_path) }}"
+                    hx-push-url="true"
                 {% endif %}
             >
                 <div class="file-icon">
@@ -48,6 +49,11 @@
                 {% if item.size %}
                     <div class="file-size">{{ "{:,.0f}".format(item.size) }} bytes</div>
                 {% endif %}
+                {% if not item.is_dir %}
+                <div style="margin-top: 0.5rem;">
+                    <small style="color: var(--pico-muted-color);">Click to preview</small>
+                </div>
+                {% endif %}
             </div>
         {% endfor %}
     </div>
@@ -55,7 +61,7 @@
     <div class="empty-state">
         <div class="empty-state-icon">📁</div>
         <p>This directory is empty.</p>
-        {% if current_path == Path() %}
+        {% if is_root %}
             <p style="font-size: 0.875rem;">
                 Start by <a href="{{ url_for('index') }}">downloading some content</a>.
             </p>
