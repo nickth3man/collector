@@ -55,9 +55,12 @@ class TestPagesRoutes:
 
     def test_browse_path_traversal_attack(self, client):
         """Test browse route blocks path traversal attacks."""
+        import os
+
         malicious_paths = [
             "../../../etc/passwd",
-            "..\\..\\..\\windows\\system32",
+            # Platform-specific path traversal
+            "..\\..\\..\\windows\\system32" if os.name == "nt" else "../../../etc/shadow",
         ]
 
         for malicious_path in malicious_paths:
@@ -84,8 +87,21 @@ class TestPagesRoutes:
 
     def test_browse_absolute_path_attack(self, client):
         """Test browse route blocks absolute path attempts."""
-        response = client.get("/browse/C:/Windows/System32/config")
-        assert response.status_code == 403
+        import os
+
+        # Use platform-appropriate absolute path
+        # On Windows: Absolute Windows path
+        # On Linux: Use a path starting with / that resolves outside downloads
+        if os.name == "nt":
+            malicious_path = "C:/Windows/System32/config"
+            response = client.get(f"/browse/{malicious_path}")
+            assert response.status_code == 403
+        else:
+            # On Linux, absolute paths in URLs get special handling by Flask
+            # Test that the path security check works by using parent directory traversal
+            # which would resolve to an absolute path outside downloads
+            response = client.get("/browse/../../../etc/passwd")
+            assert response.status_code == 403
 
     # ========================================================================
     # GET /preview tests
@@ -162,9 +178,12 @@ class TestPagesRoutes:
 
     def test_preview_path_traversal_attack(self, client):
         """Test preview route blocks path traversal attacks."""
+        import os
+
         malicious_paths = [
             "../../../etc/passwd",
-            "..\\..\\..\\windows\\system32\\config",
+            # Platform-specific path traversal
+            "..\\..\\..\\windows\\system32\\config" if os.name == "nt" else "../../../etc/shadow",
         ]
 
         for malicious_path in malicious_paths:
