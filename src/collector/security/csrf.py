@@ -4,8 +4,7 @@ from __future__ import annotations
 
 import hmac
 import secrets
-import typing
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from flask import Request
