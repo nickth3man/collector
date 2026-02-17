@@ -2,8 +2,8 @@
 
 ## OVERVIEW
 
-Security helpers for request integrity and safe file access.
-Use this module to enforce CSRF checks and block path traversal.
+Security helpers for request integrity and safe file access. Use this module to
+enforce CSRF checks and block path traversal.
 
 ## STRUCTURE
 
@@ -46,9 +46,11 @@ Use this module to enforce CSRF checks and block path traversal.
 
 ## WHERE TO LOOK
 
-- Add CSRF to a route: `security/csrf.py` -> `validate_csrf_request`, `csrf_protected`
+- Add CSRF to a route: `security/csrf.py` -> `validate_csrf_request`,
+  `csrf_protected`
 - Debug missing CSRF token handling: `security/csrf.py` -> `extract_csrf_token`
 - Change token/session constants: `security/csrf.py` constants block
 - Validate user file path input: `security/paths.py` -> `resolve_user_path`
-- Diagnose traversal failures: `security/paths.py` -> `PathSecurityError`, `is_within_base`
+- Diagnose traversal failures: `security/paths.py` -> `PathSecurityError`,
+  `is_within_base`
 - Harden file download endpoint: `security/paths.py` -> `safe_send_file`

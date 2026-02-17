@@ -8,7 +8,9 @@
 
 ## OVERVIEW
 
-Flask web application for downloading media from Instagram and YouTube with real-time progress tracking via HTMX polling. Uses repository/service pattern with background threading for downloads.
+Flask web application for downloading media from Instagram and YouTube with
+real-time progress tracking via HTMX polling. Uses repository/service pattern
+with background threading for downloads.
 
 ---
 
@@ -38,29 +40,33 @@ Flask web application for downloading media from Instagram and YouTube with real
 
 ## WHERE TO LOOK
 
-| Task | Location | Notes |
-|------|----------|-------|
-| Add new route | `src/collector/routes/` | Create blueprint, import in `__init__.py` |
-| Modify download logic | `src/collector/scrapers/` | Extend `BaseScraper` abstract class |
-| Change database schema | `src/collector/repositories/` + `models/` | Repository creates tables in `__init__` |
-| Add API endpoint | `src/collector/routes/api.py` | JSON API routes |
-| Update UI | `src/collector/templates/` | HTMX fragments in `partials/` |
-| Job management | `src/collector/services/job_service.py` | Background task coordination |
-| Security utils | `src/collector/security/` | CSRF tokens, path validation |
+| Task                   | Location                                  | Notes                                     |
+| ---------------------- | ----------------------------------------- | ----------------------------------------- |
+| Add new route          | `src/collector/routes/`                   | Create blueprint, import in `__init__.py` |
+| Modify download logic  | `src/collector/scrapers/`                 | Extend `BaseScraper` abstract class       |
+| Change database schema | `src/collector/repositories/` + `models/` | Repository creates tables in `__init__`   |
+| Add API endpoint       | `src/collector/routes/api.py`             | JSON API routes                           |
+| Update UI              | `src/collector/templates/`                | HTMX fragments in `partials/`             |
+| Job management         | `src/collector/services/job_service.py`   | Background task coordination              |
+| Security utils         | `src/collector/security/`                 | CSRF tokens, path validation              |
 
 ---
 
 ## CONVENTIONS
 
 ### Code Style
+
 - **Line length:** 100 (Ruff configured)
 - **Python:** 3.10+ with `from __future__ import annotations`
 - **Types:** Use type hints, `| None` syntax, `collections.abc` imports
 - **Formatting:** Ruff formatter (Black-compatible, 10-100x faster)
 - **Linting:** Ruff (E, F, W, I, N, UP, B)
 - **Type checking:** ty (10-100x faster than mypy/Pyright)
+- **Web Assets:** Prettier for CSS, HTML, JSON, JavaScript with 100-char line
+  width
 
 ### Naming
+
 - **Files:** `snake_case.py`
 - **Classes:** `PascalCase`
 - **Functions/vars:** `snake_case`
@@ -68,6 +74,7 @@ Flask web application for downloading media from Instagram and YouTube with real
 - **Constants:** `UPPER_SNAKE_CASE`
 
 ### Import Pattern
+
 ```python
 from __future__ import annotations
 
@@ -79,12 +86,14 @@ from .local_modules import X  # Relative imports within package
 ```
 
 ### Flask Patterns
+
 - **Blueprints:** All routes in `src/collector/routes/` package
 - **Factory:** `create_app()` in `src/collector/__init__.py`
 - **CSRF:** All POST/DELETE routes must call `validate_csrf_request(request)`
 - **HTMX:** Check `"HX-Request" in request.headers` for fragment responses
 
 ### Database
+
 - **SQLite** with row factory → dict access
 - **Pattern:** Repository classes initialize their own tables
 - **Context manager:** `with get_db() as conn:`
@@ -94,6 +103,7 @@ from .local_modules import X  # Relative imports within package
 ## ANTI-PATTERNS
 
 ### NEVER
+
 - Add routes outside `src/collector/routes/`
 - Skip CSRF validation on state-changing routes
 - Store files outside `SCRAPER_DOWNLOAD_DIR`
@@ -101,6 +111,7 @@ from .local_modules import X  # Relative imports within package
 - Block main thread (use `ExecutorAdapter` for background work)
 
 ### AVOID
+
 - Increasing `SCRAPER_MAX_CONCURRENT` above 2 (IG rate limits)
 - Using personal Instagram accounts (use throwaway + cookies)
 - Modifying `JOB_UPDATE_ALLOWED_FIELDS` without security review
@@ -118,7 +129,8 @@ uv run pytest
 uv run pytest --cov
 
 # Formatting
-uv run ruff format .
+uv run ruff format .                    # Python formatting
+npx prettier --write .              # Web assets formatting (CSS, HTML, JS, JSON)
 
 # Linting
 uv run ruff check .

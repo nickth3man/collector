@@ -230,12 +230,11 @@ class TestSessionService:
 
         mock_settings = Mock()
         mock_settings_class.return_value = mock_settings
-        mock_settings.get_by_key.return_value = None
-        mock_settings.get_by_key.return_value = None
+        mock_settings.get_setting.return_value = None
 
         mock_setting = Mock()
         mock_setting.value = "/tmp/downloads"
-        mock_settings.get_by_key.return_value = mock_setting
+        mock_settings.get_setting.return_value = mock_setting
 
         service = SessionService(session_manager=mock_manager, settings_repository=mock_settings)
         result = service.get_config_status()
@@ -254,7 +253,7 @@ class TestSessionService:
 
         mock_settings = Mock()
         mock_settings_class.return_value = mock_settings
-        mock_settings.get_by_key.return_value = None
+        mock_settings.get_setting.return_value = None
 
         service = SessionService(session_manager=mock_manager, settings_repository=mock_settings)
         result = service.get_config_status()

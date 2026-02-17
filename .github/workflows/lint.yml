@@ -2,9 +2,9 @@ name: Lint
 
 on:
   push:
-    branches: ['**']
+    branches: ["**"]
   pull_request:
-    branches: ['**']
+    branches: ["**"]
 
 jobs:
   lint:
@@ -17,8 +17,8 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
-          cache: 'pip'
+          python-version: "3.10"
+          cache: "pip"
 
       - name: Install uv package manager
         run: |
@@ -45,9 +45,9 @@ jobs:
                       src/collector/scrapers \
                       src/collector/services \
                       --ignore-missing-imports
-        continue-on-error: true  # Don't fail the workflow initially
+        continue-on-error: true # Don't fail the workflow initially
 
       - name: Type check routes (optional)
         run: |
           uv run mypy src/collector/routes --ignore-missing-imports
-        continue-on-error: true  # Known Flask type issues
+        continue-on-error: true # Known Flask type issues

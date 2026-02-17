@@ -52,9 +52,7 @@ def load_selenium_runtime() -> SimpleNamespace:
         )
         selenium_wait = importlib.import_module("selenium.webdriver.support.ui")
     except ModuleNotFoundError as exc:
-        raise RuntimeError(
-            "Selenium is required. Install it with: uv add selenium"
-        ) from exc
+        raise RuntimeError("Selenium is required. Install it with: uv add selenium") from exc
 
     return SimpleNamespace(
         webdriver=webdriver,

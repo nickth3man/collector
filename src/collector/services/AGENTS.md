@@ -1,29 +1,42 @@
 # SERVICES KNOWLEDGE BASE
 
 ## OVERVIEW
-Service layer holds orchestration and domain workflows between routes and repositories.
-Keep HTTP concerns out, keep SQL out, keep cross-repository logic here.
+
+Service layer holds orchestration and domain workflows between routes and
+repositories. Keep HTTP concerns out, keep SQL out, keep cross-repository logic
+here.
 
 ## STRUCTURE
-- `job_service.py`: Job lifecycle orchestration, safe field updates, retry creation, cancel/delete flows.
-- `scraper_service.py`: URL validation, platform detection, scraper selection, download execution state machine.
-- `session_service.py`: Route-facing session workflows, upload/load/validate/list/delete with structured result dicts.
-- `session_manager.py`: Encrypted session persistence, cookies parsing, session file I/O, expiry checks.
-- `executor_adapter.py`: Minimal task execution abstraction via daemon thread submission.
+
+- `job_service.py`: Job lifecycle orchestration, safe field updates, retry
+  creation, cancel/delete flows.
+- `scraper_service.py`: URL validation, platform detection, scraper selection,
+  download execution state machine.
+- `session_service.py`: Route-facing session workflows,
+  upload/load/validate/list/delete with structured result dicts.
+- `session_manager.py`: Encrypted session persistence, cookies parsing, session
+  file I/O, expiry checks.
+- `executor_adapter.py`: Minimal task execution abstraction via daemon thread
+  submission.
 - `__init__.py`: Public service exports.
 
 ## CONVENTIONS
+
 - Services own business rules and orchestration, routes call services.
 - Services call repositories, never open DB connections directly.
 - Prefer constructor injection with sane defaults for repositories/managers.
-- Keep method outputs route-friendly, return structured dicts for success/error where needed.
-- Use logging for operational visibility, include job/session identifiers in messages.
+- Keep method outputs route-friendly, return structured dicts for success/error
+  where needed.
+- Use logging for operational visibility, include job/session identifiers in
+  messages.
 - Use UTC ISO timestamps for completion or lifecycle markers.
 
 ### Type Checking
+
 - All service methods must have type annotations
 - Constructor parameters should be typed with concrete classes or protocols
-- Return types should be explicit, avoid bare `dict` (use `dict[str, Any]` or structured TypedDict)
+- Return types should be explicit, avoid bare `dict` (use `dict[str, Any]` or
+  structured TypedDict)
 - Run `uvx ty check` before committing service changes
 
 - `JobService` patterns:
@@ -49,9 +62,13 @@ Keep HTTP concerns out, keep SQL out, keep cross-repository logic here.
 - Keep adapter thin so execution backend can be swapped later.
 
 ## WHERE TO LOOK
+
 - Add or change job retry/cancel/delete behavior: `services/job_service.py`
-- Change progress update or terminal status behavior: `services/scraper_service.py`
+- Change progress update or terminal status behavior:
+  `services/scraper_service.py`
 - Change task execution backend semantics: `services/executor_adapter.py`
-- Change session upload/load/validation API contract: `services/session_service.py`
-- Change encryption, cookie parsing, session file rules: `services/session_manager.py`
+- Change session upload/load/validation API contract:
+  `services/session_service.py`
+- Change encryption, cookie parsing, session file rules:
+  `services/session_manager.py`
 - Export a new service for app wiring: `services/__init__.py`

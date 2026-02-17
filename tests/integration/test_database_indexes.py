@@ -4,8 +4,6 @@ This module tests that indexes are properly created and used for queries.
 """
 
 
-
-
 def test_jobs_indexes_exist(app):
     """Test that all job indexes are created."""
     from src.collector.config.database import DatabaseConfig
