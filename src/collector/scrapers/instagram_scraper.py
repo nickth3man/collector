@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import base64
 import json
 import logging
+import os
 import random
 import tempfile
 import time
@@ -136,38 +138,56 @@ class InstagramScraper(BaseScraper):
 
                 # Try to decrypt using the session manager's approach
                 # We'll need the encryption key - check env var
-                import os
-
                 key_str = os.environ.get("SCRAPER_SESSION_KEY")
                 if key_str:
-                    import base64
-
                     from cryptography.hazmat.primitives import hashes
                     from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
                     # Derive proper Fernet key
                     key_bytes = key_str.encode()
-                    if len(key_str.split(".")) < 2:
-                        # Not a proper Fernet key, derive one
+
+                    # Check if key_str is already a valid Fernet key (32 bytes base64-encoded)
+                    try:
+                        # Try to decode - if successful and length is 32, it's already a Fernet key
+                        decoded = base64.urlsafe_b64decode(key_str)
+                        if len(decoded) == 32:
+                            # Already a valid Fernet key
+                            fernet_key = key_str
+                        else:
+                            # Not a valid Fernet key, derive one from passphrase
+                            import secrets
+
+                            salt = secrets.token_bytes(16)  # Generate random salt
+                            kdf = PBKDF2HMAC(
+                                algorithm=hashes.SHA256(),
+                                length=32,
+                                salt=salt,
+                                iterations=100000,
+                            )
+                            derived_key = kdf.derive(key_bytes)
+                            fernet_key = base64.urlsafe_b64encode(derived_key).decode()
+                    except Exception:
+                        # If decoding fails, derive a key from the passphrase
+                        import secrets
+
+                        salt = secrets.token_bytes(16)  # Generate random salt
                         kdf = PBKDF2HMAC(
                             algorithm=hashes.SHA256(),
                             length=32,
-                            salt=b"instagram_scraper",
+                            salt=salt,
                             iterations=100000,
                         )
-                        key_bytes = kdf.derive(key_bytes)
-                    else:
-                        key_bytes = key_str.encode()
+                        derived_key = kdf.derive(key_bytes)
+                        fernet_key = base64.urlsafe_b64encode(derived_key).decode()
 
-                    cipher = Fernet(
-                        base64.urlsafe_b64encode(key_bytes)
-                        if len(key_str.split(".")) < 2
-                        else key_str
-                    )
+                    cipher = Fernet(fernet_key)
 
                     try:
                         decrypted_json = cipher.decrypt(encrypted_data)
                         session_data = json.loads(decrypted_json)
+
+                        # Extract username from session data if available
+                        username = session_data.get("username", "instagram_user")
 
                         # Create a temporary session file in Instaloader's format
                         # Instaloader expects: username -> session file with cookies
@@ -177,9 +197,9 @@ class InstagramScraper(BaseScraper):
                             tmp.write(json.dumps(session_data.get("cookies", {})))
                             tmp_path = Path(tmp.name)
 
-                        # Load session with Instaloader
-                        loader.load_session_from_file("instagram_user", str(tmp_path))
-                        logger.info("Loaded encrypted Instagram session from file")
+                        # Load session with Instaloader using the actual username
+                        loader.load_session_from_file(username, str(tmp_path))
+                        logger.info("Loaded encrypted Instagram session from file for user %s", username)
 
                         # Clean up temp file
                         tmp_path.unlink()

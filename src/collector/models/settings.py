@@ -34,11 +34,10 @@ class Settings(BaseModel):
         Args:
             **kwargs: Field values to set on the model instance.
         """
-        super().__init__(**kwargs)
-
         # Settings-specific fields
         self.key: str = kwargs.get("key", "")
         self.value: str = kwargs.get("value", "")
+        self.updated_at: datetime = kwargs.get("updated_at", datetime.now(timezone.utc))
 
     @classmethod
     def get_create_table_sql(cls) -> str:
@@ -61,7 +60,7 @@ class Settings(BaseModel):
         Returns:
             Tuple of (SQL statement, parameters).
         """
-        data = self.to_dict(exclude=["primary_key", "table_name", "indexes"])
+        data = self.to_dict()
         columns = ", ".join(data.keys())
         placeholders = ", ".join(["?" for _ in data])
         values = tuple(data.values())
@@ -79,7 +78,7 @@ class Settings(BaseModel):
         Returns:
             Tuple of (SQL statement, parameters).
         """
-        data = self.to_dict(exclude=["key", "primary_key", "table_name", "indexes"])
+        data = self.to_dict(exclude=["key"])
 
         # Update the timestamp
         data["updated_at"] = datetime.now(timezone.utc).isoformat()

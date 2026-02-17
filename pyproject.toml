@@ -23,6 +23,7 @@ dev = [
     "pytest-cov>=4.0.0",
     "ruff>=0.1.0",
     "ty>=0.0.17",
+    "mypy>=1.0.0",
 ]
 
 [tool.ruff]
@@ -42,19 +43,6 @@ indent-style = "space"
 skip-magic-trailing-comma = false
 # Like Black, automatically detect the appropriate line ending
 line-ending = "auto"
-
-[tool.prettier]
-# Prettier configuration for JavaScript/TypeScript/CSS/HTML files
-# Configuration is primarily in .prettierrc.json, but some defaults here
-printWidth = 100
-tabWidth = 2
-useTabs = false
-semi = true
-singleQuote = false
-trailingComma = "es5"
-bracketSpacing = true
-arrowParens = "always"
-endOfLine = "lf"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

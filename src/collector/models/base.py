@@ -39,11 +39,6 @@ class BaseModel:
         self.created_at: datetime = kwargs.get("created_at", datetime.now(timezone.utc))
         self.updated_at: datetime = kwargs.get("updated_at", datetime.now(timezone.utc))
 
-        # Set any additional attributes passed in kwargs
-        for key, value in kwargs.items():
-            if hasattr(self, key) and not callable(getattr(self, key)):
-                setattr(self, key, value)
-
     def to_dict(self, exclude: list[str] | None = None) -> dict[str, Any]:
         """Convert the model instance to a dictionary.
 
@@ -56,10 +51,14 @@ class BaseModel:
         exclude = exclude or []
         result = {}
 
+        # Internal class attributes to always exclude
+        internal_attrs = {"table_name", "primary_key", "indexes"}
+        exclude_set = set(exclude) | internal_attrs
+
         for attr_name in dir(self):
-            if not attr_name.startswith("_"):
+            if not attr_name.startswith("_") and attr_name not in exclude_set:
                 attr_value = getattr(self, attr_name)
-                if not callable(attr_value) and attr_name not in exclude:
+                if not callable(attr_value):
                     if isinstance(attr_value, datetime):
                         result[attr_name] = attr_value.isoformat()
                     else:

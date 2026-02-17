@@ -85,7 +85,7 @@ class Job(BaseModel):
         Returns:
             Tuple of (SQL statement, parameters).
         """
-        data = self.to_dict(exclude=["primary_key", "table_name", "indexes"])
+        data = self.to_dict(exclude=["id"])
         columns = ", ".join(data.keys())
         placeholders = ", ".join(["?" for _ in data])
         values = tuple(data.values())
@@ -129,14 +129,7 @@ class Job(BaseModel):
             Dictionary representation of the job instance.
         """
         exclude = exclude or []
-        result = super().to_dict(exclude=exclude)
-
-        # Handle datetime serialization for completed_at
-        if "completed_at" in result and result["completed_at"]:
-            if isinstance(result["completed_at"], datetime):
-                result["completed_at"] = result["completed_at"].isoformat()
-
-        return result
+        return super().to_dict(exclude=exclude)
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Job:

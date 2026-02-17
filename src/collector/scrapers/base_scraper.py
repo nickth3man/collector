@@ -204,5 +204,5 @@ class BaseScraper(abc.ABC):
         """
         try:
             return path.stat().st_size
-        except (OSError, FileNotFoundError):
+        except OSError:
             return 0

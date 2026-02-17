@@ -11,7 +11,13 @@ class ExecutorAdapter:
     """Execution adapter for background task submission."""
 
     def submit_job(self, func: Callable[..., Any], *args: Any) -> Thread:
-        """Submit a background job using daemon thread."""
-        thread = Thread(target=func, args=args, daemon=True)
+        """Submit a background job using daemon thread with Flask app context."""
+        from flask import current_app
+
+        def run_with_app_context():
+            with current_app.app_context():
+                func(*args)
+
+        thread = Thread(target=run_with_app_context, daemon=True)
         thread.start()
         return thread

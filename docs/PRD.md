@@ -300,7 +300,7 @@ mapping between download jobs and physical files.
 
 ### 6.3 Project Structure
 
-```
+```text
 project/
 ├── app.py                  # Flask entry point, routes, job management
 ├── config.py               # Centralized configuration with env var support

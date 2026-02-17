@@ -16,7 +16,7 @@ with background threading for downloads.
 
 ## STRUCTURE
 
-```
+```text
 ./
 ├── wsgi.py                 # Thin entry point (imports from collector package)
 ├── src/

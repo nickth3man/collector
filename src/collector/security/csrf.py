@@ -29,14 +29,13 @@ def get_csrf_token_from_session(request: Request) -> str | None:
     """Get CSRF token from session.
 
     Args:
-        request: Flask request object with session
+        request: Flask request object
 
     Returns:
         CSRF token or None if not set
     """
-    if not hasattr(request, "session"):
-        return None
-    session: Any = typing.cast(Any, request.session)
+    from flask import session
+
     return session.get(CSRF_SESSION_KEY)
 
 
@@ -44,15 +43,15 @@ def set_csrf_token_in_session(request: Request) -> str:
     """Generate and store a new CSRF token in session.
 
     Args:
-        request: Flask request object with session
+        request: Flask request object
 
     Returns:
         The newly generated token
     """
+    from flask import session
+
     token = generate_csrf_token()
-    if hasattr(request, "session"):
-        session: Any = typing.cast(Any, request.session)
-        session[CSRF_SESSION_KEY] = token
+    session[CSRF_SESSION_KEY] = token
     return token
 
 

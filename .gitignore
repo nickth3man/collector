@@ -47,7 +47,7 @@ Desktop.ini
 # Project specific
 *.png
 !docs/**/*.png
-!static/**/*.png
+!**/static/**/*.png
 .sisyphus/
 .python-version
 

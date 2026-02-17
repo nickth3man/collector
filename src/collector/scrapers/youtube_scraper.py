@@ -47,14 +47,6 @@ class YouTubeScraper(BaseScraper):
         Returns:
             Scrape result dictionary with success status, files, metadata
         """
-        scrape_result: dict[str, Any] = {
-            "success": False,
-            "title": None,
-            "files": [],
-            "metadata": {},
-            "error": None,
-        }
-
         try:
             self.update_progress(0, "Initializing YouTube scraper")
 
@@ -66,8 +58,13 @@ class YouTubeScraper(BaseScraper):
 
         except Exception as e:
             logger.exception("Error scraping YouTube URL: %s", url)
-            scrape_result["error"] = str(e)
-            return scrape_result
+            return {
+                "success": False,
+                "title": None,
+                "files": [],
+                "metadata": {},
+                "error": str(e),
+            }
 
     def _is_playlist_or_channel(self, url: str) -> bool:
         """Check if URL is a playlist or channel.
@@ -329,20 +326,19 @@ class YouTubeScraper(BaseScraper):
 
             # Try to get transcript (manually created first, then auto-generated)
             try:
-                transcript = cast(Any, api).fetch(video_id, languages=["en"])
+                fetched = api.fetch(video_id, languages=["en"])
             except Exception:
                 # Fallback to auto-generated
                 try:
-                    transcript = cast(Any, api).fetch(
-                        video_id, languages=["en"], languages_auto=True
-                    )
+                    transcript_list = api.list(video_id)
+                    fetched = transcript_list.find_generated_transcript(["en"]).fetch()
                 except Exception:
                     # No transcript available
                     logger.info("No transcript available for video %s", video_id)
                     return None
 
             # Format as plain text
-            transcript_text = self._format_transcript(cast(list[dict[str, Any]], transcript))
+            transcript_text = self._format_transcript(fetched.to_raw_data())
 
             # Save to file
             transcript_path = output_dir / "transcript.txt"

@@ -40,7 +40,7 @@ class Config:
     SCRAPER_SESSION_KEY: str | None = os.environ.get("SCRAPER_SESSION_KEY")
 
     # Flask settings
-    DEBUG: bool = os.environ.get("FLASK_DEBUG", "true").lower() in ("true", "1", "yes")
+    DEBUG: bool = os.environ.get("FLASK_DEBUG", "false").lower() in ("true", "1", "yes")
     TESTING: bool = os.environ.get("FLASK_TESTING", "false").lower() in ("true", "1", "yes")
 
     # Application settings
