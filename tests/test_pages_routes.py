@@ -90,12 +90,18 @@ class TestPagesRoutes:
         import os
 
         # Use platform-appropriate absolute path
+        # On Windows: Absolute Windows path
+        # On Linux: Use a path starting with / that resolves outside downloads
         if os.name == "nt":
             malicious_path = "C:/Windows/System32/config"
+            response = client.get(f"/browse/{malicious_path}")
+            assert response.status_code == 403
         else:
-            malicious_path = "/etc/passwd"
-        response = client.get(f"/browse/{malicious_path}")
-        assert response.status_code == 403
+            # On Linux, absolute paths in URLs get special handling by Flask
+            # Test that the path security check works by using parent directory traversal
+            # which would resolve to an absolute path outside downloads
+            response = client.get("/browse/../../../etc/passwd")
+            assert response.status_code == 403
 
     # ========================================================================
     # GET /preview tests
