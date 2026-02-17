@@ -2,10 +2,7 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-from unittest.mock import Mock, patch
-
-import pytest
+from unittest.mock import patch
 
 
 class TestPagesRoutes:
@@ -80,7 +77,7 @@ class TestPagesRoutes:
         with patch(
             "collector.routes.pages.safe_send_file", return_value=mock_response
         ) as mock_send:
-            response = client.get("/browse/test.txt")
+            client.get("/browse/test.txt")
 
             # For files, safe_send_file is called
             mock_send.assert_called_once()
@@ -153,7 +150,7 @@ class TestPagesRoutes:
         test_dir = tmp_download_dir / "testdir"
         test_dir.mkdir()
 
-        response = client.get(f"/preview/testdir", follow_redirects=False)
+        response = client.get("/preview/testdir", follow_redirects=False)
 
         assert response.status_code == 302
 

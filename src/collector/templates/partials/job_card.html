@@ -1,106 +1,87 @@
 {# HTMX fragment for a single job card #}
 <div class="job-card panel">
-    <div class="panel-body">
-        <div class="job-header">
-            <div>
-                <h3 class="job-title">
-                    {% if job.title %}
-                        {{ job.title }}
-                    {% else %}
-                        {{ job.url }}
-                    {% endif %}
-                </h3>
-                {% if job.title and job.url %}
-                    <p class="job-subtitle">{{ job.url }}</p>
-                {% endif %}
-                <div class="job-meta" style="margin-top: 0.4rem;">
-                    <span class="badge badge-{{ job.platform }}">{{ job.platform }}</span>
-                    <span class="status-chip status-{{ job.status }}">{{ job.status }}</span>
-                    {% if job.created_at %}
-                        <span class="job-meta-note">
-                            {{ job.created_at.strftime('%Y-%m-%d %H:%M:%S') if job.created_at else '' }}
-                        </span>
-                    {% endif %}
-                </div>
-            </div>
+  <div class="panel-body">
+    <div class="job-header">
+      <div>
+        <h3 class="job-title">
+          {% if job.title %} {{ job.title }} {% else %} {{ job.url }} {% endif %}
+        </h3>
+        {% if job.title and job.url %}
+        <p class="job-subtitle">{{ job.url }}</p>
+        {% endif %}
+        <div class="job-meta" style="margin-top: 0.4rem">
+          <span class="badge badge-{{ job.platform }}">{{ job.platform }}</span>
+          <span class="status-chip status-{{ job.status }}">{{ job.status }}</span>
+          {% if job.created_at %}
+          <span class="job-meta-note">
+            {{ job.created_at.strftime('%Y-%m-%d %H:%M:%S') if job.created_at else '' }}
+          </span>
+          {% endif %}
         </div>
-
-        {% if job.progress is none %}
-            {% set progress = 0 %}
-        {% else %}
-            {% set progress = job.progress %}
-        {% endif %}
-
-        {% if job.status in ['pending', 'running'] or progress > 0 %}
-            {% include 'partials/progress_bar.html' %}
-        {% endif %}
-
-        {% if job.error_message %}
-            <div class="error-message">
-                <strong>Error:</strong> {{ job.error_message }}
-            </div>
-        {% endif %}
-
-        {% if job.status == 'completed' and files %}
-            <details>
-                <summary>Files downloaded ({{ files|length }})</summary>
-                <ul style="margin: 0.5rem 0 0; padding-left: 1.2rem;">
-                    {% for file in files %}
-                        <li style="font-size: 0.875rem; margin-bottom: 0.25rem;">
-                            <a href="{{ url_for('pages.browse', subpath=file.file_path) }}" target="_blank">
-                                {{ file.file_path.split('/')[-1] }}
-                            </a>
-                            <span class="job-meta-note" style="display: inline;">
-                                ({{ "{:,.0f}".format(file.file_size) if file.file_size else '0' }} bytes)
-                            </span>
-                        </li>
-                    {% endfor %}
-                </ul>
-            </details>
-        {% endif %}
-
-        {% if job.status == 'completed' and not files %}
-            <p class="helper-text">Completed. Use Browse to locate downloaded files for {{ job.platform }}.</p>
-        {% endif %}
-
-        {% if job.retry_count and job.retry_count > 0 %}
-            <div class="job-meta-note">
-                Retry attempt {{ job.retry_count }}
-            </div>
-        {% endif %}
+      </div>
     </div>
 
-    <footer class="panel-footer">
-        <div class="action-row">
-            {% if job.status in ['pending', 'running'] %}
-                <form
-                    method="post"
-                    action="{{ url_for('jobs.cancel_job', job_id=job.id) }}"
-                    hx-post="{{ url_for('jobs.cancel_job', job_id=job.id) }}"
-                    hx-target="closest .job-card"
-                    hx-swap="outerHTML"
-                >
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                    <button type="submit" class="action-primary">Cancel</button>
-                </form>
-            {% endif %}
+    {% if job.progress is none %} {% set progress = 0 %} {% else %} {% set progress = job.progress
+    %} {% endif %} {% if job.status in ['pending', 'running'] or progress > 0 %} {% include
+    'partials/progress_bar.html' %} {% endif %} {% if job.error_message %}
+    <div class="error-message">
+      <strong>Error:</strong>
+      {{ job.error_message }}
+    </div>
+    {% endif %} {% if job.status == 'completed' and files %}
+    <details>
+      <summary>Files downloaded ({{ files|length }})</summary>
+      <ul style="margin: 0.5rem 0 0; padding-left: 1.2rem">
+        {% for file in files %}
+        <li style="font-size: 0.875rem; margin-bottom: 0.25rem">
+          <a href="{{ url_for('pages.browse', subpath=file.file_path) }}" target="_blank">
+            {{ file.file_path.split('/')[-1] }}
+          </a>
+          <span class="job-meta-note" style="display: inline">
+            ({{ "{:,.0f}".format(file.file_size) if file.file_size else '0' }} bytes)
+          </span>
+        </li>
+        {% endfor %}
+      </ul>
+    </details>
+    {% endif %} {% if job.status == 'completed' and not files %}
+    <p class="helper-text">
+      Completed. Use Browse to locate downloaded files for {{ job.platform }}.
+    </p>
+    {% endif %} {% if job.retry_count and job.retry_count > 0 %}
+    <div class="job-meta-note">Retry attempt {{ job.retry_count }}</div>
+    {% endif %}
+  </div>
 
-            {% if job.status == 'failed' %}
-                <form
-                    method="post"
-                    action="{{ url_for('jobs.retry_job', job_id=job.id) }}"
-                    hx-post="{{ url_for('jobs.retry_job', job_id=job.id) }}"
-                    hx-target="closest .job-card"
-                    hx-swap="outerHTML"
-                >
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                    <button type="submit" class="action-primary">Retry</button>
-                </form>
-            {% endif %}
-
-            {% if job.status == 'completed' %}
-                <a href="{{ url_for('pages.browse', subpath=job.platform) }}" class="action-primary">Open Files</a>
-            {% endif %}
-        </div>
-    </footer>
+  <footer class="panel-footer">
+    <div class="action-row">
+      {% if job.status in ['pending', 'running'] %}
+      <form
+        method="post"
+        action="{{ url_for('jobs.cancel_job', job_id=job.id) }}"
+        hx-post="{{ url_for('jobs.cancel_job', job_id=job.id) }}"
+        hx-target="closest .job-card"
+        hx-swap="outerHTML"
+      >
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+        <button type="submit" class="action-primary">Cancel</button>
+      </form>
+      {% endif %} {% if job.status == 'failed' %}
+      <form
+        method="post"
+        action="{{ url_for('jobs.retry_job', job_id=job.id) }}"
+        hx-post="{{ url_for('jobs.retry_job', job_id=job.id) }}"
+        hx-target="closest .job-card"
+        hx-swap="outerHTML"
+      >
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+        <button type="submit" class="action-primary">Retry</button>
+      </form>
+      {% endif %} {% if job.status == 'completed' %}
+      <a href="{{ url_for('pages.browse', subpath=job.platform) }}" class="action-primary">
+        Open Files
+      </a>
+      {% endif %}
+    </div>
+  </footer>
 </div>

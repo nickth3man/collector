@@ -6,7 +6,7 @@ This module provides the Settings model class for managing application settings 
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, ClassVar
 
 from .base import BaseModel
@@ -82,7 +82,7 @@ class Settings(BaseModel):
         data = self.to_dict(exclude=["key", "primary_key", "table_name", "indexes"])
 
         # Update the timestamp
-        data["updated_at"] = datetime.utcnow().isoformat()
+        data["updated_at"] = datetime.now(timezone.utc).isoformat()
 
         set_clause = ", ".join([f"{key} = ?" for key in data.keys()])
         values = tuple(data.values())

@@ -6,10 +6,9 @@ This module provides a base model class with common functionality for all databa
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, ClassVar, TypeVar
 from uuid import uuid4
-import re
 
 T = TypeVar("T", bound="BaseModel")
 
@@ -37,8 +36,8 @@ class BaseModel:
             **kwargs: Field values to set on the model instance.
         """
         self.id: str = kwargs.get("id", str(uuid4()))
-        self.created_at: datetime = kwargs.get("created_at", datetime.utcnow())
-        self.updated_at: datetime = kwargs.get("updated_at", datetime.utcnow())
+        self.created_at: datetime = kwargs.get("created_at", datetime.now(timezone.utc))
+        self.updated_at: datetime = kwargs.get("updated_at", datetime.now(timezone.utc))
 
         # Set any additional attributes passed in kwargs
         for key, value in kwargs.items():
@@ -89,7 +88,7 @@ class BaseModel:
 
     def update_timestamp(self) -> None:
         """Update the updated_at timestamp to current time."""
-        self.updated_at = datetime.utcnow()
+        self.updated_at = datetime.now(timezone.utc)
 
     def __repr__(self) -> str:
         """Return a string representation of the model."""
@@ -215,7 +214,7 @@ class BaseModel:
         data = self.to_dict(exclude=[self.primary_key, "created_at"])
 
         # Update the timestamp
-        data["updated_at"] = datetime.utcnow().isoformat()
+        data["updated_at"] = datetime.now(timezone.utc).isoformat()
 
         set_clause = ", ".join([f"{key} = ?" for key in data.keys()])
         values = tuple(data.values())

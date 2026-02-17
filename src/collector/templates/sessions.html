@@ -1,168 +1,189 @@
-{% extends "base.html" %}
-
-{% block title %}Sessions - Content Collector{% endblock %}
-
-{% block content %}
+{% extends "base.html" %} {% block title %}Sessions - Content Collector{% endblock %} {% block
+content %}
 <div class="page-header">
-    <h1>Sessions</h1>
-    <p class="page-subtitle">
-        Follow setup readiness first, then upload and manage Instagram sessions.
-    </p>
+  <h1>Sessions</h1>
+  <p class="page-subtitle">
+    Follow setup readiness first, then upload and manage Instagram sessions.
+  </p>
 </div>
 
 <section class="section-stack">
-    <article class="panel">
-        <header class="panel-header">
-            <div>
-                <h2>Step 1 · Setup Readiness</h2>
-                <p class="helper-text">Confirm encryption is configured before uploading session cookies.</p>
-            </div>
-        </header>
+  <article class="panel">
+    <header class="panel-header">
+      <div>
+        <h2>Step 1 · Setup Readiness</h2>
+        <p class="helper-text">
+          Confirm encryption is configured before uploading session cookies.
+        </p>
+      </div>
+    </header>
 
-        <div class="panel-body">
-            {% if config.SCRAPER_SESSION_KEY %}
-                <div class="notification success" style="margin: 0;">
-                    <strong>Ready:</strong> <code>SCRAPER_SESSION_KEY</code> is configured for encrypted session storage.
-                </div>
-            {% else %}
-                <div class="notification warning" style="margin: 0;">
-                    <strong>Setup required:</strong> No <code>SCRAPER_SESSION_KEY</code> found. Sessions cannot be saved
-                    securely until this is configured.
-                </div>
-            {% endif %}
+    <div class="panel-body">
+      {% if config.SCRAPER_SESSION_KEY %}
+      <div class="notification success" style="margin: 0">
+        <strong>Ready:</strong>
+        <code>SCRAPER_SESSION_KEY</code>
+        is configured for encrypted session storage.
+      </div>
+      {% else %}
+      <div class="notification warning" style="margin: 0">
+        <strong>Setup required:</strong>
+        No
+        <code>SCRAPER_SESSION_KEY</code>
+        found. Sessions cannot be saved securely until this is configured.
+      </div>
+      {% endif %}
 
-            <p class="helper-text">Use cookies only from throwaway Instagram accounts.</p>
+      <p class="helper-text">Use cookies only from throwaway Instagram accounts.</p>
+    </div>
+  </article>
+
+  <article class="panel">
+    <header class="panel-header">
+      <div>
+        <h2>Step 2 · Upload Cookies</h2>
+        <p class="helper-text">
+          Upload one
+          <code>cookies.txt</code>
+          file to create or refresh a saved session.
+        </p>
+      </div>
+    </header>
+
+    <div class="panel-body">
+      <form
+        hx-post="{{ url_for('sessions.upload_session') }}"
+        hx-encoding="multipart/form-data"
+        hx-target="#upload-result"
+        hx-swap="outerHTML"
+      >
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+        <label for="cookies_file">cookies.txt file</label>
+        <input type="file" id="cookies_file" name="cookies_file" accept=".txt" required />
+        <p class="helper-text">
+          Include standard Instagram session cookies (for example: sessionid, ds_user_id, mid).
+        </p>
+        <div class="action-row" style="margin-top: 0.9rem">
+          <button type="submit" class="action-primary">
+            Upload Session
+            <span class="htmx-indicator" style="margin-left: 0.35rem">⏳</span>
+          </button>
         </div>
-    </article>
+      </form>
 
-    <article class="panel">
-        <header class="panel-header">
-            <div>
-                <h2>Step 2 · Upload Cookies</h2>
-                <p class="helper-text">Upload one <code>cookies.txt</code> file to create or refresh a saved session.</p>
+      <div id="upload-result"></div>
+    </div>
+  </article>
+
+  <article class="panel">
+    <header class="panel-header">
+      <div>
+        <h2>Step 3 · Manage Saved Sessions</h2>
+        <p class="helper-text">Review current sessions and remove entries you no longer need.</p>
+      </div>
+    </header>
+
+    <div class="panel-body">
+      {% if sessions %}
+      <div class="card-grid" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr))">
+        {% for session in sessions %}
+        <div class="panel">
+          <div class="panel-body" style="padding: 0">
+            <div class="job-header" style="margin-bottom: 0">
+              <div>
+                <h3 class="job-title">
+                  <span style="font-size: 1.2rem; margin-right: 0.35rem">🔑</span>
+                  {{ session.username }}
+                </h3>
+                <div class="job-meta" style="margin-top: 0.35rem">
+                  <span class="badge badge-instagram">Instagram session</span>
+                  <span class="job-meta-note">Created: {{ session.created_at[:19] }}Z</span>
+                </div>
+              </div>
             </div>
-        </header>
+          </div>
 
-        <div class="panel-body">
+          <footer class="panel-footer">
             <form
-                hx-post="{{ url_for('sessions.upload_session') }}"
-                hx-encoding="multipart/form-data"
-                hx-target="#upload-result"
-                hx-swap="outerHTML"
+              method="post"
+              action="{{ url_for('sessions.delete_session', username=session.username) }}"
+              hx-post="{{ url_for('sessions.delete_session', username=session.username) }}"
+              hx-confirm="Are you sure you want to delete this session?"
+              hx-target="closest .panel"
+              hx-swap="outerHTML"
             >
-                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                <label for="cookies_file">cookies.txt file</label>
-                <input
-                    type="file"
-                    id="cookies_file"
-                    name="cookies_file"
-                    accept=".txt"
-                    required
-                >
-                <p class="helper-text">Include standard Instagram session cookies (for example: sessionid, ds_user_id, mid).</p>
-                <div class="action-row" style="margin-top: 0.9rem;">
-                    <button type="submit" class="action-primary">
-                        Upload Session
-                        <span class="htmx-indicator" style="margin-left: 0.35rem;">⏳</span>
-                    </button>
-                </div>
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+              <button type="submit" class="action-danger">Delete</button>
             </form>
-
-            <div id="upload-result"></div>
+          </footer>
         </div>
-    </article>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <div class="empty-state-icon">🔑</div>
+        <p>No sessions configured yet.</p>
+        <p class="helper-text" style="margin-top: 0.75rem">
+          Upload a cookies file in Step 2 to add one.
+        </p>
+      </div>
+      {% endif %}
+    </div>
+  </article>
 
-    <article class="panel">
-        <header class="panel-header">
-            <div>
-                <h2>Step 3 · Manage Saved Sessions</h2>
-                <p class="helper-text">Review current sessions and remove entries you no longer need.</p>
-            </div>
-        </header>
+  <article class="panel">
+    <header class="panel-header">
+      <div>
+        <h2>Advanced Guidance</h2>
+        <p class="helper-text">Optional setup and security details.</p>
+      </div>
+    </header>
 
-        <div class="panel-body">
-            {% if sessions %}
-                <div class="card-grid" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">
-                    {% for session in sessions %}
-                    <div class="panel">
-                        <div class="panel-body" style="padding: 0;">
-                            <div class="job-header" style="margin-bottom: 0;">
-                                <div>
-                                    <h3 class="job-title">
-                                        <span style="font-size: 1.2rem; margin-right: 0.35rem;">🔑</span>
-                                        {{ session.username }}
-                                    </h3>
-                                    <div class="job-meta" style="margin-top: 0.35rem;">
-                                        <span class="badge badge-instagram">Instagram session</span>
-                                        <span class="job-meta-note">Created: {{ session.created_at[:19] }}Z</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+    <div class="panel-body">
+      <details>
+        <summary>How to export Instagram cookies</summary>
+        <ol style="margin-bottom: 0">
+          <li>
+            Install an extension like
+            <strong>EditThisCookie</strong>
+            or
+            <strong>GetCookies.txt</strong>
+            .
+          </li>
+          <li>Sign in to Instagram with a throwaway account.</li>
+          <li>
+            Export cookies and save as
+            <code>cookies.txt</code>
+            .
+          </li>
+          <li>Upload the file in Step 2.</li>
+        </ol>
+      </details>
 
-                        <footer class="panel-footer">
-                            <form
-                                method="post"
-                                action="{{ url_for('sessions.delete_session', username=session.username) }}"
-                                hx-post="{{ url_for('sessions.delete_session', username=session.username) }}"
-                                hx-confirm="Are you sure you want to delete this session?"
-                                hx-target="closest .panel"
-                                hx-swap="outerHTML"
-                            >
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                                <button type="submit" class="action-danger">Delete</button>
-                            </form>
-                        </footer>
-                    </div>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <div class="empty-state">
-                    <div class="empty-state-icon">🔑</div>
-                    <p>No sessions configured yet.</p>
-                    <p class="helper-text" style="margin-top: 0.75rem;">Upload a cookies file in Step 2 to add one.</p>
-                </div>
-            {% endif %}
+      <details>
+        <summary>Security and storage details</summary>
+        <p class="helper-text">
+          Sessions are encrypted using Fernet with
+          <code>SCRAPER_SESSION_KEY</code>
+          . Keep the key stable across runs.
+        </p>
+        <div class="notification warning" style="margin: 0.75rem 0 0">
+          Never upload cookies from personal Instagram accounts.
         </div>
-    </article>
+      </details>
 
-    <article class="panel">
-        <header class="panel-header">
-            <div>
-                <h2>Advanced Guidance</h2>
-                <p class="helper-text">Optional setup and security details.</p>
-            </div>
-        </header>
-
-        <div class="panel-body">
-            <details>
-                <summary>How to export Instagram cookies</summary>
-                <ol style="margin-bottom: 0;">
-                    <li>Install an extension like <strong>EditThisCookie</strong> or <strong>GetCookies.txt</strong>.</li>
-                    <li>Sign in to Instagram with a throwaway account.</li>
-                    <li>Export cookies and save as <code>cookies.txt</code>.</li>
-                    <li>Upload the file in Step 2.</li>
-                </ol>
-            </details>
-
-            <details>
-                <summary>Security and storage details</summary>
-                <p class="helper-text">
-                    Sessions are encrypted using Fernet with <code>SCRAPER_SESSION_KEY</code>. Keep the key stable across runs.
-                </p>
-                <div class="notification warning" style="margin: 0.75rem 0 0;">
-                    Never upload cookies from personal Instagram accounts.
-                </div>
-            </details>
-
-            <details>
-                <summary>Generate session encryption key</summary>
-                <p class="helper-text">Set an environment variable before using session upload:</p>
-                <pre><code>export SCRAPER_SESSION_KEY=$(python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())")</code></pre>
-                <p class="helper-text">Or add this in <code>.env</code>:</p>
-                <pre><code>SCRAPER_SESSION_KEY=your-generated-key-here</code></pre>
-            </details>
-        </div>
-    </article>
+      <details>
+        <summary>Generate session encryption key</summary>
+        <p class="helper-text">Set an environment variable before using session upload:</p>
+        <pre><code>export SCRAPER_SESSION_KEY=$(python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())")</code></pre>
+        <p class="helper-text">
+          Or add this in
+          <code>.env</code>
+          :
+        </p>
+        <pre><code>SCRAPER_SESSION_KEY=your-generated-key-here</code></pre>
+      </details>
+    </div>
+  </article>
 </section>
 {% endblock %}

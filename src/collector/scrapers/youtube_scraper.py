@@ -289,7 +289,8 @@ class YouTubeScraper(BaseScraper):
                     )
                     video_title = entry.get("title", "Unknown")
 
-                    scrape_result["metadata"]["videos"].append(
+                    videos_list = cast(list[Any], scrape_result["metadata"]["videos"])
+                    videos_list.append(
                         {
                             "id": entry.get("id"),
                             "title": video_title,

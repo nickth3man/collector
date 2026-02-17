@@ -25,6 +25,7 @@ Each module owns one route domain and delegates business logic to services.
 - **Service boundary:** routes orchestrate request/response only, heavy logic lives in service layer.
 
 ### Type Checking
+
 - Route handler return types should be explicit: `str`, `Response`, `tuple[str, int]`
 - Import Flask types: `Request`, `Response`, `Blueprint`
 - Service dependencies should be typed at module level

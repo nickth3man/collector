@@ -1,84 +1,73 @@
-{% extends "base.html" %}
-
-{% block title %}Browse Files - Content Collector{% endblock %}
-
-{% block content %}
+{% extends "base.html" %} {% block title %}Browse Files - Content Collector{% endblock %} {% block
+content %}
 <div class="page-header">
-    <h1>Browse Files</h1>
-    <p class="page-subtitle">
-        Explore downloaded content by folder. Open any file to preview, then return to continue browsing.
-    </p>
+  <h1>Browse Files</h1>
+  <p class="page-subtitle">
+    Explore downloaded content by folder. Open any file to preview, then return to continue
+    browsing.
+  </p>
 </div>
 
 <div class="breadcrumb">
-    <a href="{{ url_for('pages.browse') }}">🏠 Root</a>
-    {% if current_path_parts %}
-        {% set ns = namespace(path='') %}
-        {% for part in current_path_parts %}
-            {% set ns.path = (ns.path ~ '/' if ns.path else '') ~ part %}
-            <span>/</span>
-            <a href="{{ url_for('pages.browse', subpath=ns.path) }}">{{ part }}</a>
-        {% endfor %}
-    {% endif %}
+  <a href="{{ url_for('pages.browse') }}">🏠 Root</a>
+  {% if current_path_parts %} {% set ns = namespace(path='') %} {% for part in current_path_parts %}
+  {% set ns.path = (ns.path ~ '/' if ns.path else '') ~ part %}
+  <span>/</span>
+  <a href="{{ url_for('pages.browse', subpath=ns.path) }}">{{ part }}</a>
+  {% endfor %} {% endif %}
 </div>
 
 {% if items %}
-    <div class="file-grid">
-        {% for item in items %}
-            <div
-                class="file-item"
-                {% if item.is_dir %}
-                    hx-get="{{ url_for('pages.browse', subpath=item.relative_path) }}"
-                    hx-push-url="true"
-                {% else %}
-                    hx-get="{{ url_for('pages.preview_file', filepath=item.relative_path) }}"
-                    hx-push-url="true"
-                {% endif %}
-            >
-                <div class="file-icon">
-                    {% if item.is_dir %}
-                        📁
-                    {% elif item.name.endswith(('.mp4', '.mov', '.webm')) %}
-                        🎥
-                    {% elif item.name.endswith(('.jpg', '.jpeg', '.png', '.webp', '.gif')) %}
-                        🖼️
-                    {% elif item.name.endswith('.json') %}
-                        📋
-                    {% elif item.name.endswith('.txt') %}
-                        📄
-                    {% elif item.name.endswith(('.mp3', '.m4a', '.wav')) %}
-                        🎵
-                    {% else %}
-                        📄
-                    {% endif %}
-                </div>
-                <div class="file-name">{{ item.name }}</div>
-                {% if item.size %}
-                    <div class="file-size">{{ "{:,.0f}".format(item.size) }} bytes</div>
-                {% endif %}
-                {% if not item.is_dir %}
-                <div style="margin-top: 0.5rem;">
-                    <small class="helper-text">Preview file</small>
-                </div>
-                {% endif %}
-            </div>
-        {% endfor %}
+<div class="file-grid">
+  {% for item in items %}
+  <div
+    class="file-item"
+    {%
+    if
+    item.is_dir
+    %}
+    hx-get="{{ url_for('pages.browse', subpath=item.relative_path) }}"
+    hx-push-url="true"
+    {%
+    else
+    %}
+    hx-get="{{ url_for('pages.preview_file', filepath=item.relative_path) }}"
+    hx-push-url="true"
+    {%
+    endif
+    %}
+  >
+    <div class="file-icon">
+      {% if item.is_dir %} 📁 {% elif item.name.endswith(('.mp4', '.mov', '.webm')) %} 🎥 {% elif
+      item.name.endswith(('.jpg', '.jpeg', '.png', '.webp', '.gif')) %} 🖼️ {% elif
+      item.name.endswith('.json') %} 📋 {% elif item.name.endswith('.txt') %} 📄 {% elif
+      item.name.endswith(('.mp3', '.m4a', '.wav')) %} 🎵 {% else %} 📄 {% endif %}
     </div>
+    <div class="file-name">{{ item.name }}</div>
+    {% if item.size %}
+    <div class="file-size">{{ "{:,.0f}".format(item.size) }} bytes</div>
+    {% endif %} {% if not item.is_dir %}
+    <div style="margin-top: 0.5rem">
+      <small class="helper-text">Preview file</small>
+    </div>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
 {% else %}
-    <div class="empty-state">
-        <div class="empty-state-icon">📁</div>
-        <p>This directory is empty.</p>
-        {% if is_root %}
-            <p class="helper-text">Start by creating a new download from the dashboard.</p>
-            <div class="action-row" style="justify-content: center; margin-top: 0.75rem;">
-                <a href="{{ url_for('pages.index') }}" role="button">Go to Dashboard</a>
-            </div>
-        {% else %}
-            <p class="helper-text">Move up one level or return to root to continue browsing.</p>
-            <div class="action-row" style="justify-content: center; margin-top: 0.75rem;">
-                <a href="{{ url_for('pages.browse') }}" class="secondary" role="button">Back to Root</a>
-            </div>
-        {% endif %}
-    </div>
-{% endif %}
-{% endblock %}
+<div class="empty-state">
+  <div class="empty-state-icon">📁</div>
+  <p>This directory is empty.</p>
+  {% if is_root %}
+  <p class="helper-text">Start by creating a new download from the dashboard.</p>
+  <div class="action-row" style="justify-content: center; margin-top: 0.75rem">
+    <a href="{{ url_for('pages.index') }}" role="button">Go to Dashboard</a>
+  </div>
+  {% else %}
+  <p class="helper-text">Move up one level or return to root to continue browsing.</p>
+  <div class="action-row" style="justify-content: center; margin-top: 0.75rem">
+    <a href="{{ url_for('pages.browse') }}" class="secondary" role="button">Back to Root</a>
+  </div>
+  {% endif %}
+</div>
+{% endif %} {% endblock %}

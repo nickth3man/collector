@@ -2,10 +2,6 @@
 
 from __future__ import annotations
 
-from unittest.mock import patch
-
-import pytest
-
 
 class TestApiRoutes:
     """Test cases for API routes."""

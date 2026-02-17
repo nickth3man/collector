@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from io import BytesIO
 
-import pytest
-
 
 class TestSessionsRoutes:
     """Test cases for session management routes."""

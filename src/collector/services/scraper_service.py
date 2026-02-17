@@ -59,8 +59,8 @@ class ScraperService:
             db_path: Path to SQLite database
             download_dir: Directory for downloaded files
         """
-        self.job_repository = job_repository or JobRepository()
-        self.file_repository = file_repository or FileRepository()
+        self.job_repository: JobRepository = job_repository or JobRepository()
+        self.file_repository: FileRepository = file_repository or FileRepository()
         self.session_manager = session_manager
         self.db_path = db_path
         self.download_dir = download_dir

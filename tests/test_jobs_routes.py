@@ -5,8 +5,6 @@ from __future__ import annotations
 from datetime import datetime
 from unittest.mock import Mock
 
-import pytest
-from flask import Flask
 from collector.models.job import Job
 
 

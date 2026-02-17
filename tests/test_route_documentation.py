@@ -6,9 +6,6 @@ comprehensive docstrings following Google-style conventions.
 
 import ast
 import inspect
-from pathlib import Path
-
-import pytest
 
 
 def get_all_routes():
@@ -28,6 +25,8 @@ def get_all_routes():
     for module_name, bp in blueprints:
         # Get the module source
         module = inspect.getmodule(bp)
+        if module is None:
+            continue
         source = inspect.getsource(module)
 
         # Parse AST

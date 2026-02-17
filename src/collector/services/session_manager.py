@@ -104,7 +104,9 @@ class SessionManager:
                 }
 
                 # Filter for Instagram session cookies
-                if "instagram.com" in cookie["domain"] and cookie["name"] in [
+                cookie_name = str(cookie["name"])
+                cookie_domain = str(cookie["domain"])
+                if "instagram.com" in cookie_domain and cookie_name in [
                     "sessionid",
                     "ds_user_id",
                     "mid",

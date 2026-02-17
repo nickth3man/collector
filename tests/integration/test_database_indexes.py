@@ -3,11 +3,7 @@
 This module tests that indexes are properly created and used for queries.
 """
 
-import pytest
 
-from src.collector.models.file import File
-from src.collector.models.job import Job
-from src.collector.models.settings import Settings
 
 
 def test_jobs_indexes_exist(app):
@@ -250,8 +246,8 @@ def test_ensure_indexes_is_idempotent(app):
         db_config = DatabaseConfig()
 
         # Call ensure_indexes twice - should not fail
-        from src.collector.models.job import Job
         from src.collector.models.file import File
+        from src.collector.models.job import Job
         from src.collector.models.settings import Settings
 
         model_classes = [Job, File, Settings]

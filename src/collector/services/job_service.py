@@ -122,7 +122,7 @@ class JobService:
         """
         jobs = self.job_repository.get_active_jobs()
 
-        stale_cutoff = datetime.utcnow() - timedelta(minutes=30)
+        stale_cutoff = datetime.now(timezone.utc) - timedelta(minutes=30)
         active_jobs: list[Job] = []
 
         for job in jobs:

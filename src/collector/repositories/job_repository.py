@@ -37,6 +37,48 @@ class JobRepository(BaseRepository[Job]):
         job = Job(url=url, platform=platform, status="pending", title=title)
         return self.create(job)
 
+    def update_job(self, job_id: str, **fields: Any) -> bool:
+        """Update job fields with safe/allowed field enforcement.
+
+        Args:
+            job_id: Job ID to update
+            **fields: Fields to update (must be in allowed list)
+
+        Returns:
+            True if updated successfully, False if job not found or no valid fields
+        """
+        # Define allowed fields for updates (prevents accidental updates of sensitive fields)
+        allowed_fields = {
+            "status",
+            "title",
+            "progress",
+            "current_operation",
+            "error_message",
+            "retry_count",
+            "bytes_downloaded",
+            "completed_at",
+        }
+
+        # Filter to only allowed fields
+        safe_fields = {k: v for k, v in fields.items() if k in allowed_fields}
+        if not safe_fields:
+            return False
+
+        job = self.get_by_id(job_id)
+        if not job:
+            return False
+
+        # Update job fields
+        for field, value in safe_fields.items():
+            setattr(job, field, value)
+
+        # Update timestamp
+        job.update_timestamp()
+
+        # Save to repository
+        self.update(job)
+        return True
+
     def get_active_jobs(self) -> list[Job]:
         """Get all active jobs (pending, running, or cancelling).
 

@@ -1,10 +1,12 @@
 # SECURITY MODULE GUIDE
 
 ## OVERVIEW
+
 Security helpers for request integrity and safe file access.
 Use this module to enforce CSRF checks and block path traversal.
 
 ## STRUCTURE
+
 - `security/csrf.py`
   - Token lifecycle helpers: generate, store in session, extract from request
   - Route guard helpers: `validate_csrf_request(request)`, `csrf_protected`
@@ -16,6 +18,7 @@ Use this module to enforce CSRF checks and block path traversal.
   - Package marker for security helpers
 
 ## CONVENTIONS
+
 - State-changing routes call `validate_csrf_request(request)` before mutation.
 - Enforce CSRF on `POST`, `PUT`, `PATCH`, `DELETE` handlers.
 - Accept CSRF token from form field `csrf_token` or header `X-CSRFToken`.
@@ -35,12 +38,14 @@ Use this module to enforce CSRF checks and block path traversal.
   - missing or non-file path -> `404`
 
 ### Type Checking
+
 - Security functions must have complete type annotations
 - Use `Flask.Request` type for Flask request objects
 - Path functions should accept and return `Path` objects
 - Run `uvx ty check` to verify security boundary types
 
 ## WHERE TO LOOK
+
 - Add CSRF to a route: `security/csrf.py` -> `validate_csrf_request`, `csrf_protected`
 - Debug missing CSRF token handling: `security/csrf.py` -> `extract_csrf_token`
 - Change token/session constants: `security/csrf.py` constants block

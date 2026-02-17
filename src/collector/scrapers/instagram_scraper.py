@@ -8,7 +8,7 @@ import random
 import tempfile
 import time
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import instaloader
 
@@ -440,7 +440,8 @@ class InstagramScraper(BaseScraper):
                     filepath = output_dir / filename
 
                     # Download file
-                    loader.context.download_pic(
+                    context = cast(Any, loader.context)
+                    context.download_pic(
                         filename=str(filepath), url=url, mtime=post.date_local.timestamp()
                     )
 
@@ -687,7 +688,7 @@ class InstagramScraper(BaseScraper):
             output_dir.mkdir(parents=True, exist_ok=True)
 
             # Get available stories
-            from instaloader.stories import stories
+            from instaloader.stories import stories  # type: ignore
 
             story_items = list(stories([profile.userid], loader.context))
 

@@ -13,6 +13,7 @@ Behavior:
 from __future__ import annotations
 
 import base64
+import importlib
 import os
 import subprocess
 import sys
@@ -43,11 +44,13 @@ PAGES: list[tuple[str, str]] = [
 def load_selenium_runtime() -> SimpleNamespace:
     """Import Selenium modules lazily with a clear error if unavailable."""
     try:
-        from selenium import webdriver
-        from selenium.common.exceptions import TimeoutException, WebDriverException
-        from selenium.webdriver.common.by import By
-        from selenium.webdriver.support import expected_conditions as EC
-        from selenium.webdriver.support.ui import WebDriverWait
+        webdriver = importlib.import_module("selenium.webdriver")
+        selenium_exceptions = importlib.import_module("selenium.common.exceptions")
+        selenium_by = importlib.import_module("selenium.webdriver.common.by")
+        selenium_expected_conditions = importlib.import_module(
+            "selenium.webdriver.support.expected_conditions"
+        )
+        selenium_wait = importlib.import_module("selenium.webdriver.support.ui")
     except ModuleNotFoundError as exc:
         raise RuntimeError(
             "Selenium is required. Install it with: uv add selenium"
@@ -55,11 +58,11 @@ def load_selenium_runtime() -> SimpleNamespace:
 
     return SimpleNamespace(
         webdriver=webdriver,
-        TimeoutException=TimeoutException,
-        WebDriverException=WebDriverException,
-        By=By,
-        EC=EC,
-        WebDriverWait=WebDriverWait,
+        TimeoutException=selenium_exceptions.TimeoutException,
+        WebDriverException=selenium_exceptions.WebDriverException,
+        By=selenium_by.By,
+        expected_conditions=selenium_expected_conditions,
+        WebDriverWait=selenium_wait.WebDriverWait,
     )
 
 
@@ -179,7 +182,9 @@ def wait_for_page_ready(driver: Any, selenium_runtime: SimpleNamespace) -> None:
         lambda d: d.execute_script("return document.readyState") == "complete"
     )
     selenium_runtime.WebDriverWait(driver, PAGE_LOAD_TIMEOUT_SECONDS).until(
-        selenium_runtime.EC.presence_of_element_located((selenium_runtime.By.TAG_NAME, "body"))
+        selenium_runtime.expected_conditions.presence_of_element_located(
+            (selenium_runtime.By.TAG_NAME, "body")
+        )
     )
     time.sleep(PAGE_SETTLE_SECONDS)
 
@@ -211,7 +216,7 @@ def save_full_page_screenshot(driver: Any, output_path: Path) -> None:
             },
         )["data"]
         output_path.write_bytes(base64.b64decode(screenshot_b64))
-    except Exception:
+    except Exception as exc:
         # Fallback for environments where CDP capture is unavailable.
         total_width = int(
             driver.execute_script(
@@ -226,7 +231,7 @@ def save_full_page_screenshot(driver: Any, output_path: Path) -> None:
         driver.set_window_size(total_width, total_height)
         ok = driver.save_screenshot(str(output_path))
         if not ok:
-            raise RuntimeError(f"Failed to save screenshot: {output_path}")
+            raise RuntimeError(f"Failed to save screenshot: {output_path}") from exc
     finally:
         try:
             driver.execute_cdp_cmd("Emulation.clearDeviceMetricsOverride", {})

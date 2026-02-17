@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import hmac
 import secrets
-from typing import TYPE_CHECKING
+import typing
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from flask import Request
@@ -33,7 +34,10 @@ def get_csrf_token_from_session(request: Request) -> str | None:
     Returns:
         CSRF token or None if not set
     """
-    return request.session.get(CSRF_SESSION_KEY) if hasattr(request, "session") else None
+    if not hasattr(request, "session"):
+        return None
+    session: Any = typing.cast(Any, request.session)
+    return session.get(CSRF_SESSION_KEY)
 
 
 def set_csrf_token_in_session(request: Request) -> str:
@@ -47,7 +51,8 @@ def set_csrf_token_in_session(request: Request) -> str:
     """
     token = generate_csrf_token()
     if hasattr(request, "session"):
-        request.session[CSRF_SESSION_KEY] = token
+        session: Any = typing.cast(Any, request.session)
+        session[CSRF_SESSION_KEY] = token
     return token
 
 
@@ -60,10 +65,7 @@ def get_or_create_csrf_token(request: Request) -> str:
     Returns:
         CSRF token string
     """
-    token = get_csrf_token_from_session(request)
-    if not token:
-        token = set_csrf_token_in_session(request)
-    return token
+    return get_csrf_token_from_session(request) or set_csrf_token_in_session(request)
 
 
 def extract_csrf_token(request: Request) -> str | None:

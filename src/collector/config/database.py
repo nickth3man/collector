@@ -6,15 +6,16 @@ This module provides database configuration and connection management.
 
 from __future__ import annotations
 
+import re
 import sqlite3
 from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
-import re
 
 from flask import current_app, g
 
+from ..models.base import BaseModel
 from .settings import Config
 
 
@@ -93,7 +94,7 @@ class DatabaseConfig:
             conn.commit()
             return cursor.rowcount
 
-    def create_indexes(self, model_classes: list[type]) -> None:
+    def create_indexes(self, model_classes: list[type[BaseModel]]) -> None:
         """Create indexes for the given model classes.
 
         Args:
@@ -128,7 +129,7 @@ class DatabaseConfig:
             conn.commit()
             print("\nIndex creation complete!")
 
-    def ensure_indexes(self, model_classes: list[type]) -> None:
+    def ensure_indexes(self, model_classes: list[type[BaseModel]]) -> None:
         """Ensure all indexes exist for the given models.
 
         This method checks for existing indexes and creates any missing ones.
@@ -181,7 +182,7 @@ class DatabaseConfig:
             conn.commit()
             print("\nIndex verification complete!")
 
-    def initialize_schema(self, model_classes: list[type]) -> None:
+    def initialize_schema(self, model_classes: list[type[BaseModel]]) -> None:
         """Initialize database schema including tables and indexes.
 
         Args:

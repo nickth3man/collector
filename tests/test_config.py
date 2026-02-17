@@ -5,8 +5,6 @@ from __future__ import annotations
 import os
 from unittest import mock
 
-import pytest
-
 from collector.config.settings import Config
 
 
@@ -98,6 +96,7 @@ class TestDefaultDiskWarningValue:
         try:
             # Re-import to pick up default
             from importlib import reload
+
             import collector.config.settings
 
             reload(collector.config.settings)

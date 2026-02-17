@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from datetime import datetime
 from pathlib import Path
-from unittest.mock import Mock
 
 import pytest
 
@@ -55,8 +54,8 @@ def app(app_config_overrides: dict[str, str], tmp_db_path: Path, tmp_download_di
 
     # Initialize database schema
     with app.app_context():
-        from collector.repositories.job_repository import JobRepository
         from collector.repositories.file_repository import FileRepository
+        from collector.repositories.job_repository import JobRepository
         from collector.repositories.settings_repository import SettingsRepository
 
         JobRepository()

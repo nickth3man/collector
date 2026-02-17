@@ -161,7 +161,7 @@ class BaseScraper(abc.ABC):
         file_type: str,
         file_size: int,
         metadata: dict[str, Any] | None = None,
-    ) -> int:
+    ) -> int | None:
         """Save a file record to the database.
 
         Args:
@@ -172,7 +172,7 @@ class BaseScraper(abc.ABC):
             metadata: Optional metadata JSON
 
         Returns:
-            The file record ID
+            The file record ID or None if not available
         """
         with self.get_db_connection() as conn:
             cursor = conn.cursor()

@@ -1,177 +1,185 @@
-{% extends "base.html" %}
-
-{% block title %}{{ file_name }} - Preview{% endblock %}
-
-{% block content %}
+{% extends "base.html" %} {% block title %}{{ file_name }} - Preview{% endblock %} {% block content
+%}
 <div class="page-header">
-    <h1>File Preview</h1>
-    <p class="page-subtitle">Review file contents, then continue browsing from the same location.</p>
+  <h1>File Preview</h1>
+  <p class="page-subtitle">Review file contents, then continue browsing from the same location.</p>
 </div>
 
 <section class="section-stack">
-    {% set parent_path = '/'.join(file_path.split('/')[:-1]) %}
+  {% set parent_path = '/'.join(file_path.split('/')[:-1]) %}
 
-    <article class="panel">
-        <div class="action-row" style="justify-content: space-between; gap: 0.75rem;">
-            <div class="breadcrumb" style="margin-bottom: 0;">
-                <a href="{{ url_for('pages.browse') }}">🏠 Root</a>
-                {% set parts = file_path.split('/') %}
-                {% set ns = namespace(path='') %}
-                {% for part in parts[:-1] %}
-                    {% set ns.path = (ns.path ~ '/' if ns.path else '') ~ part %}
-                    <span>/</span>
-                    <a href="{{ url_for('pages.browse', subpath=ns.path) }}">{{ part }}</a>
-                {% endfor %}
-                {% if parts %}
-                    <span>/</span>
-                    <span>{{ parts[-1] }}</span>
-                {% endif %}
-            </div>
-
-            <div class="action-row">
-                <a href="{{ url_for('pages.browse', subpath=parent_path) }}" role="button" class="action-secondary">Back to Directory</a>
-                <a href="{{ url_for('pages.browse', subpath=file_path) }}" role="button" class="action-primary" download>Download File</a>
-                <a href="{{ url_for('pages.browse') }}" role="button" class="action-secondary">Browse Root</a>
-            </div>
-        </div>
-    </article>
-
-    <article class="panel">
-        <div class="job-header">
-            <div>
-                <h2 class="job-title">{{ file_name }}</h2>
-                <p class="job-subtitle">{{ file_path }}</p>
-            </div>
-            <div class="job-meta">
-                <span class="status-chip status-running" style="background: var(--pico-muted-color);">
-                    {{ file_type.upper() }}
-                </span>
-            </div>
-        </div>
-
-        {% if file_type == 'image' %}
-        <div style="text-align: center; padding: 1.5rem;">
-            <img
-                src="{{ url_for('pages.browse', subpath=file_path) }}"
-                alt="{{ file_name }}"
-                style="max-width: 100%; max-height: 80vh; border-radius: 8px;"
-            >
-        </div>
+  <article class="panel">
+    <div class="action-row" style="justify-content: space-between; gap: 0.75rem">
+      <div class="breadcrumb" style="margin-bottom: 0">
+        <a href="{{ url_for('pages.browse') }}">🏠 Root</a>
+        {% set parts = file_path.split('/') %} {% set ns = namespace(path='') %} {% for part in
+        parts[:-1] %} {% set ns.path = (ns.path ~ '/' if ns.path else '') ~ part %}
+        <span>/</span>
+        <a href="{{ url_for('pages.browse', subpath=ns.path) }}">{{ part }}</a>
+        {% endfor %} {% if parts %}
+        <span>/</span>
+        <span>{{ parts[-1] }}</span>
         {% endif %}
+      </div>
 
-        {% if file_type == 'video' %}
-        <div style="text-align: center; padding: 1.5rem;">
-            <video
-                controls
-                style="max-width: 100%; max-height: 80vh; border-radius: 8px;"
-                preload="metadata"
-            >
-                <source src="{{ url_for('pages.browse', subpath=file_path) }}" type="video/mp4">
-                Your browser does not support the video tag.
-            </video>
-        </div>
-        {% endif %}
+      <div class="action-row">
+        <a
+          href="{{ url_for('pages.browse', subpath=parent_path) }}"
+          role="button"
+          class="action-secondary"
+        >
+          Back to Directory
+        </a>
+        <a
+          href="{{ url_for('pages.browse', subpath=file_path) }}"
+          role="button"
+          class="action-primary"
+          download
+        >
+          Download File
+        </a>
+        <a href="{{ url_for('pages.browse') }}" role="button" class="action-secondary">
+          Browse Root
+        </a>
+      </div>
+    </div>
+  </article>
 
-        {% if file_type == 'transcript' %}
-        <div style="padding: 1.5rem;">
-            <h3>Transcript</h3>
-            {% if content %}
-            <pre
-                style="background: var(--pico-card-background-color);
-                       border: 1px solid var(--pico-border-color);
-                       border-radius: 8px;
-                       padding: 1.5rem;
-                       overflow-x: auto;
-                       font-size: 0.9375rem;
-                       line-height: 1.6;
-                       white-space: pre-wrap;
-                       word-wrap: break-word;"
-            >{{ content }}</pre>
-            {% else %}
-            <p class="helper-text">No transcript content is available for this file.</p>
-            {% endif %}
-        </div>
-        {% endif %}
+  <article class="panel">
+    <div class="job-header">
+      <div>
+        <h2 class="job-title">{{ file_name }}</h2>
+        <p class="job-subtitle">{{ file_path }}</p>
+      </div>
+      <div class="job-meta">
+        <span class="status-chip status-running" style="background: var(--pico-muted-color)">
+          {{ file_type.upper() }}
+        </span>
+      </div>
+    </div>
 
-        {% if file_type == 'metadata' %}
-        <div style="padding: 1.5rem;">
-            <h3>Metadata</h3>
-            {% if content %}
-            <pre
-                id="json-viewer"
-                style="background: var(--pico-card-background-color);
-                       border: 1px solid var(--pico-border-color);
-                       border-radius: 8px;
-                       padding: 1.5rem;
-                       overflow: auto;
-                       font-size: 0.875rem;"
-            >{{ content }}</pre>
-            {% else %}
-            <p class="helper-text">No metadata is available for this file.</p>
-            {% endif %}
-        </div>
-        {% endif %}
-
-        {% if file_type == 'text' %}
-        <div style="padding: 1.5rem;">
-            <h3>Text Content</h3>
-            {% if content %}
-            <pre
-                style="background: var(--pico-card-background-color);
-                       border: 1px solid var(--pico-border-color);
-                       border-radius: 8px;
-                       padding: 1.5rem;
-                       overflow-x: auto;
-                       white-space: pre-wrap;
-                       word-wrap: break-word;"
-            >{{ content }}</pre>
-            {% else %}
-            <p class="helper-text">No text content is available for this file.</p>
-            {% endif %}
-        </div>
-        {% endif %}
-
-        {% if file_type == 'audio' %}
-        <div style="text-align: center; padding: 1.5rem;">
-            <audio
-                controls
-                style="max-width: 100%;"
-            >
-                <source src="{{ url_for('pages.browse', subpath=file_path) }}">
-                Your browser does not support the audio element.
-            </audio>
-        </div>
-        {% endif %}
-
-        {% if file_type == 'unknown' %}
-        <div class="empty-state" style="padding-top: 1.5rem;">
-            <div class="empty-state-icon">📄</div>
-            <p>Preview is not available for this file type.</p>
-            <p class="helper-text">Download the file or return to the folder to choose another item.</p>
-            <div class="action-row" style="justify-content: center; margin-top: 0.75rem;">
-                <a href="{{ url_for('pages.browse', subpath=file_path) }}" class="action-primary" download>Download File</a>
-                <a href="{{ url_for('pages.browse', subpath=parent_path) }}" class="action-secondary">Back to Directory</a>
-            </div>
-        </div>
-        {% endif %}
-    </article>
+    {% if file_type == 'image' %}
+    <div style="text-align: center; padding: 1.5rem">
+      <img
+        src="{{ url_for('pages.browse', subpath=file_path) }}"
+        alt="{{ file_name }}"
+        style="max-width: 100%; max-height: 80vh; border-radius: 8px"
+      />
+    </div>
+    {% endif %} {% if file_type == 'video' %}
+    <div style="text-align: center; padding: 1.5rem">
+      <video
+        controls
+        style="max-width: 100%; max-height: 80vh; border-radius: 8px"
+        preload="metadata"
+      >
+        <source src="{{ url_for('pages.browse', subpath=file_path) }}" type="video/mp4" />
+        Your browser does not support the video tag.
+      </video>
+    </div>
+    {% endif %} {% if file_type == 'transcript' %}
+    <div style="padding: 1.5rem">
+      <h3>Transcript</h3>
+      {% if content %}
+      <pre
+        style="
+          background: var(--pico-card-background-color);
+          border: 1px solid var(--pico-border-color);
+          border-radius: 8px;
+          padding: 1.5rem;
+          overflow-x: auto;
+          font-size: 0.9375rem;
+          line-height: 1.6;
+          white-space: pre-wrap;
+          word-wrap: break-word;
+        "
+      >
+{{ content }}</pre
+      >
+      {% else %}
+      <p class="helper-text">No transcript content is available for this file.</p>
+      {% endif %}
+    </div>
+    {% endif %} {% if file_type == 'metadata' %}
+    <div style="padding: 1.5rem">
+      <h3>Metadata</h3>
+      {% if content %}
+      <pre
+        id="json-viewer"
+        style="
+          background: var(--pico-card-background-color);
+          border: 1px solid var(--pico-border-color);
+          border-radius: 8px;
+          padding: 1.5rem;
+          overflow: auto;
+          font-size: 0.875rem;
+        "
+      >
+{{ content }}</pre
+      >
+      {% else %}
+      <p class="helper-text">No metadata is available for this file.</p>
+      {% endif %}
+    </div>
+    {% endif %} {% if file_type == 'text' %}
+    <div style="padding: 1.5rem">
+      <h3>Text Content</h3>
+      {% if content %}
+      <pre
+        style="
+          background: var(--pico-card-background-color);
+          border: 1px solid var(--pico-border-color);
+          border-radius: 8px;
+          padding: 1.5rem;
+          overflow-x: auto;
+          white-space: pre-wrap;
+          word-wrap: break-word;
+        "
+      >
+{{ content }}</pre
+      >
+      {% else %}
+      <p class="helper-text">No text content is available for this file.</p>
+      {% endif %}
+    </div>
+    {% endif %} {% if file_type == 'audio' %}
+    <div style="text-align: center; padding: 1.5rem">
+      <audio controls style="max-width: 100%">
+        <source src="{{ url_for('pages.browse', subpath=file_path) }}" />
+        Your browser does not support the audio element.
+      </audio>
+    </div>
+    {% endif %} {% if file_type == 'unknown' %}
+    <div class="empty-state" style="padding-top: 1.5rem">
+      <div class="empty-state-icon">📄</div>
+      <p>Preview is not available for this file type.</p>
+      <p class="helper-text">Download the file or return to the folder to choose another item.</p>
+      <div class="action-row" style="justify-content: center; margin-top: 0.75rem">
+        <a href="{{ url_for('pages.browse', subpath=file_path) }}" class="action-primary" download>
+          Download File
+        </a>
+        <a href="{{ url_for('pages.browse', subpath=parent_path) }}" class="action-secondary">
+          Back to Directory
+        </a>
+      </div>
+    </div>
+    {% endif %}
+  </article>
 </section>
 
-{% endblock %}
-
-{% block scripts %}
+{% endblock %} {% block scripts %}
 <script>
-    // Simple JSON formatting
-    document.addEventListener('DOMContentLoaded', () => {
-        const jsonViewer = document.getElementById('json-viewer');
-        if (jsonViewer) {
-            try {
-                const jsonData = JSON.parse(jsonViewer.textContent);
-                jsonViewer.textContent = JSON.stringify(jsonData, null, 2);
-            } catch (e) {
-                // Not valid JSON, keep original content
-            }
-        }
-    });
+  // Simple JSON formatting
+  document.addEventListener("DOMContentLoaded", () => {
+    const jsonViewer = document.getElementById("json-viewer");
+    if (jsonViewer) {
+      try {
+        const jsonData = JSON.parse(jsonViewer.textContent);
+        jsonViewer.textContent = JSON.stringify(jsonData, null, 2);
+      } catch (e) {
+        // Not valid JSON, keep original content
+      }
+    }
+  });
 </script>
 {% endblock %}

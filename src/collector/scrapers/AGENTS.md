@@ -1,16 +1,19 @@
 # SCRAPERS KNOWLEDGE
 
 ## OVERVIEW
+
 Platform adapters live here.
 Each scraper extends one contract, returns one result shape, reports progress for live UI polling.
 
 ## STRUCTURE
+
 - `base_scraper.py` - abstract contract + shared helpers (progress, metadata/file persistence, filename sanitization)
 - `youtube_scraper.py` - `YouTubeScraper` using `yt-dlp` + transcript fetch via `youtube-transcript-api`
 - `instagram_scraper.py` - `InstagramScraper` using `instaloader` + cookie/session auth + delay-based throttling
 - `__init__.py` - package marker
 
 ## CONVENTIONS
+
 - Inherit from `BaseScraper`
 - Implement `scrape(url: str, job_id: str) -> dict[str, Any]`
 - Return dict keys: `success`, `title`, `files`, `metadata`, `error`
@@ -23,12 +26,14 @@ Each scraper extends one contract, returns one result shape, reports progress fo
 - Keep platform-specific parsing private (`_extract_*`, `_fetch_*`, `_download_*`)
 
 ### Type Checking
+
 - Annotate all public method signatures with types
 - Use `dict[str, Any]` for scraper result dicts  
 - Abstract methods from `BaseScraper` must match parent signature exactly
 - Run `uvx ty check` to catch signature mismatches
 
 ### YouTube Pattern
+
 - Primary downloader: `yt_dlp.YoutubeDL`
 - Supports single video plus playlist/channel metadata paths
 - Quality handled by preset or format string, audio-only path supported
@@ -36,6 +41,7 @@ Each scraper extends one contract, returns one result shape, reports progress fo
 - Metadata extracted from `yt-dlp` info dict and filtered for non-null values
 
 ### Instagram Pattern
+
 - Primary downloader: `instaloader.Instaloader`
 - URL classes: profile and post/reel
 - Session auth from encrypted session file when available
@@ -44,6 +50,7 @@ Each scraper extends one contract, returns one result shape, reports progress fo
 - On auth/rate errors (`401`, `404`, `429`), return actionable `error` text
 
 ## WHERE TO LOOK
+
 - Add new platform: create `<platform>_scraper.py` with class `<Platform>Scraper(BaseScraper)`
 - First implement `scrape(...)` with standard result dict and progress checkpoints
 - Add private helpers for URL parsing, media download, metadata mapping

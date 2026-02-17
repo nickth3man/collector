@@ -6,7 +6,7 @@ This module provides the Job model class for managing job records in the databas
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, ClassVar
 
 from .base import BaseModel
@@ -106,7 +106,7 @@ class Job(BaseModel):
         data = self.to_dict(exclude=["id", "created_at", "primary_key", "table_name", "indexes"])
 
         # Update the timestamp
-        data["updated_at"] = datetime.utcnow().isoformat()
+        data["updated_at"] = datetime.now(timezone.utc).isoformat()
 
         set_clause = ", ".join([f"{key} = ?" for key in data.keys()])
         values = tuple(data.values())
@@ -168,7 +168,7 @@ class Job(BaseModel):
         """Mark the job as completed with current timestamp."""
         self.status = "completed"
         self.progress = 100
-        self.completed_at = datetime.utcnow()
+        self.completed_at = datetime.now(timezone.utc)
         self.update_timestamp()
 
     def mark_failed(self, error_message: str) -> None:

@@ -7,7 +7,6 @@ from pathlib import Path
 
 import capture_screenshots as base_capture
 
-
 base_capture.OUTPUT_DIR = Path("docs/ui/after")
 
 

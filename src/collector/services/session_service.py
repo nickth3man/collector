@@ -213,7 +213,7 @@ class SessionService:
             # Get download directory from settings
             download_dir = None
             if self.settings_repository:
-                download_dir_setting = self.settings_repository.get_by_key("download_dir")
+                download_dir_setting = self.settings_repository.get_setting("download_dir")
                 if download_dir_setting:
                     download_dir = download_dir_setting.value
 
