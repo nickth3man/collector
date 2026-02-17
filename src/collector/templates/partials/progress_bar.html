@@ -1,0 +1,10 @@
+{# HTMX fragment for progress bar #}
+<div class="progress-container">
+  <progress value="{{ progress }}" max="100"></progress>
+  <div class="progress-text">
+    <span class="progress-percent">{{ progress }}%</span>
+    <span class="progress-operation">
+      {{ operation or job.current_operation or 'Initializing...' }}
+    </span>
+  </div>
+</div>

@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh pr view:*)",
+      "Bash(gh api:*)",
+      "Bash(git rm:*)",
+      "Bash(git add:*)"
+    ]
+  },
+  "enabledPlugins": {
+    "claude-code-setup@claude-plugins-official": true
+  }
+}

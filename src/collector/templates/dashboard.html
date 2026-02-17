@@ -1,0 +1,136 @@
+{% extends "base.html" %} {% block title %}Dashboard - Content Collector{% endblock %} {% block
+content %}
+<div class="page-header">
+  <h1>Dashboard</h1>
+  <p class="page-subtitle">
+    Start a download, monitor active progress, then move completed files to Browse and History.
+  </p>
+</div>
+
+<section class="section-stack">
+  <article class="panel">
+    <header class="panel-header">
+      <div>
+        <h2>Start Download</h2>
+        <p class="helper-text">Paste an Instagram or YouTube URL to create a new job.</p>
+      </div>
+    </header>
+
+    <div class="panel-body">
+      <form
+        hx-post="{{ url_for('jobs.download') }}"
+        hx-target="#active-jobs"
+        hx-swap="beforeend"
+        class="url-input-group"
+        style="width: 100%; margin-bottom: 0"
+      >
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+        <input
+          type="url"
+          name="url"
+          placeholder="Paste Instagram or YouTube URL..."
+          required
+          autofocus
+          aria-label="Content URL"
+        />
+        <button type="submit" class="action-primary">
+          Start Download
+          <span class="htmx-indicator" style="margin-left: 0.35rem">⏳</span>
+        </button>
+      </form>
+
+      {% if not config.SECRET_KEY or config.SECRET_KEY == 'dev-secret-key-change-in-production' %}
+      <div class="notification warning" style="margin: 0">
+        <strong>Security notice:</strong>
+        The app is using a default
+        <code>SECRET_KEY</code>
+        . Set a production key before deployment.
+      </div>
+      {% endif %}
+    </div>
+  </article>
+
+  <article class="panel">
+    <header class="panel-header">
+      <div>
+        <h2>Active Downloads</h2>
+        <p class="helper-text">
+          This section refreshes every 5 seconds while jobs are in progress.
+        </p>
+      </div>
+    </header>
+
+    <div class="panel-body">
+      <div
+        id="active-jobs"
+        hx-get="{{ url_for('jobs.active_jobs') }}"
+        hx-trigger="load, every 5s"
+        hx-swap="innerHTML"
+      >
+        <div class="empty-state">
+          <div class="empty-state-icon">📥</div>
+          <p>No active downloads. Paste a URL above to get started.</p>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <article class="panel">
+    <header class="panel-header">
+      <div>
+        <h2>Help & Platform Support</h2>
+        <p class="helper-text">Optional reference content for supported inputs and workflow.</p>
+      </div>
+    </header>
+
+    <div class="panel-body">
+      <details>
+        <summary>Supported platforms</summary>
+        <div class="card-grid">
+          <div class="panel" style="padding: 0.85rem">
+            <h3 style="margin-bottom: 0.35rem">📺 YouTube</h3>
+            <p class="helper-text">
+              Videos, playlists, and channels with transcripts when available.
+            </p>
+            <p class="job-meta-note">youtube.com, youtu.be, playlists, channels</p>
+          </div>
+
+          <div class="panel" style="padding: 0.85rem">
+            <h3 style="margin-bottom: 0.35rem">📸 Instagram</h3>
+            <p class="helper-text">
+              Photos, videos, reels, and profile posts (cookies recommended).
+            </p>
+            <p class="job-meta-note">profiles, posts, reels</p>
+          </div>
+        </div>
+      </details>
+
+      <details>
+        <summary>Quick start</summary>
+        <ol style="margin-bottom: 0">
+          <li>
+            Paste a supported URL into
+            <strong>Start Download</strong>
+            .
+          </li>
+          <li>
+            Submit and monitor progress in
+            <strong>Active Downloads</strong>
+            .
+          </li>
+          <li>
+            Open finished files in
+            <a href="{{ url_for('pages.browse') }}">Browse</a>
+            .
+          </li>
+          <li>
+            Review final outcomes in
+            <a href="{{ url_for('pages.history') }}">History</a>
+            .
+          </li>
+        </ol>
+      </details>
+    </div>
+  </article>
+</section>
+{% endblock %}

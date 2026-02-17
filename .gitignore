@@ -1,0 +1,53 @@
+# Python / Build
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# Tooling caches
+.pytest_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+.mypy_cache/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.key
+
+# Flask / App Data
+instance/
+downloads/
+*.db
+*.sqlite
+*.sqlite3
+.webassets-cache/
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+
+# Project specific
+*.png
+!docs/**/*.png
+!**/static/**/*.png
+.sisyphus/
+.python-version
+

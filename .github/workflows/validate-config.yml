@@ -1,0 +1,116 @@
+name: Validate Config
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: "pip"
+
+      - name: Install uv package manager
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install dependencies
+        run: |
+          uv sync
+
+      - name: Create test .env file
+        run: |
+          cat > .env.test << 'EOF'
+          FLASK_SECRET_KEY=test-secret-key-for-ci
+          SCRAPER_DOWNLOAD_DIR=/tmp/test-downloads
+          SCRAPER_DB_PATH=/tmp/test-scraper.db
+          SCRAPER_MAX_CONCURRENT=2
+          SCRAPER_IG_DELAY_MIN=5
+          SCRAPER_IG_DELAY_MAX=10
+          SCRAPER_DISK_WARN_MB=1024
+          FLASK_HOST=127.0.0.1
+          FLASK_PORT=5000
+          EOF
+
+      - name: Test Config class instantiation
+        run: |
+          uv run python -c "
+          import os
+          os.environ['FLASK_SECRET_KEY'] = 'test-key'
+          from src.collector.config.settings import Config, get_config
+          config = get_config()
+          assert config.SECRET_KEY == 'test-key'
+          assert str(config.SCRAPER_DOWNLOAD_DIR) == './downloads'
+          assert config.SCRAPER_MAX_CONCURRENT == 2
+          print('Config instantiation: OK')
+          print(f'Download dir: {config.SCRAPER_DOWNLOAD_DIR}')
+          print(f'Max concurrent: {config.SCRAPER_MAX_CONCURRENT}')
+          "
+
+      - name: Test validation rules
+        run: |
+          uv run python -c "
+          import os
+          from src.collector.config.settings import Config
+
+          # Test valid values
+          os.environ['FLASK_SECRET_KEY'] = 'test'
+          os.environ['SCRAPER_MAX_CONCURRENT'] = '5'
+          os.environ['SCRAPER_IG_DELAY_MIN'] = '10'
+          os.environ['SCRAPER_IG_DELAY_MAX'] = '20'
+          config = Config()
+          assert config.SCRAPER_MAX_CONCURRENT == 5
+          assert config.SCRAPER_IG_DELAY_MIN == 10.0
+          assert config.SCRAPER_IG_DELAY_MAX == 20.0
+          print('Validation rules: OK')
+          "
+
+      - name: Test environment variable loading
+        run: |
+          uv run python -c "
+          import os
+          os.environ['FLASK_SECRET_KEY'] = 'test'
+          os.environ['SCRAPER_DOWNLOAD_DIR'] = '/custom/path'
+          from src.collector.config.settings import get_config
+          config = get_config()
+          assert str(config.SCRAPER_DOWNLOAD_DIR) == '/custom/path'
+          print('Environment variable loading: OK')
+          "
+
+      - name: Test Config.validate() method
+        run: |
+          uv run python -c "
+          import os
+          from src.collector.config.settings import Config
+
+          # Test valid config
+          os.environ['FLASK_SECRET_KEY'] = 'test-key'
+          os.environ['FLASK_DEBUG'] = 'true'
+          os.environ['SCRAPER_MAX_CONCURRENT'] = '3'
+          os.environ['SCRAPER_IG_DELAY_MIN'] = '5'
+          os.environ['SCRAPER_IG_DELAY_MAX'] = '10'
+          config = Config()
+          errors = config.validate()
+          assert len(errors) == 0, f'Expected no errors, got: {errors}'
+          print('Config validation: OK')
+          "
+
+      - name: Verify .env.example exists
+        run: |
+          if [ -f .env.example ]; then
+            echo '.env.example exists'
+          else
+            echo 'Warning: .env.example not found'
+            echo 'Create .env.example with all required environment variables'
+          fi
